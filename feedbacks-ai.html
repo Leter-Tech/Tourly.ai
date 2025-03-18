@@ -1,0 +1,4411 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Tourly.ai - Smart Tourist Site Management Platform</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="icon" type="image/x-icon" href="other_assets/Tourly.ai Logo.png">
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-auth-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-database-compat.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <style>
+        :root {
+            --primary: #ff6b9d;
+            --primary-light: #ff8fb3;
+            --primary-dark: #e64980;
+            --black: #1a1a1a;
+            --white: #ffffff;
+            --gray: #f5f5f5;
+            --dark-gray: #333333;
+            --success-color: #28a745;
+            --failure-color: #dc3545;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Poppins', sans-serif;
+        }
+
+        body {
+            background-color: var(--gray);
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            overflow-x: hidden;
+        }
+
+        .container {
+            width: 100%;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            background-color: var(--white);
+            transition: all 0.5s ease;
+        }
+
+        .auth-container {
+            width: 100%;
+            max-width: 420px;
+            padding: 40px;
+            border-radius: 20px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+            background-color: var(--white);
+            text-align: center;
+            transition: transform 0.5s ease, opacity 0.5s ease;
+        }
+
+        .auth-container.hidden {
+            display: none !important;
+            opacity: 0;
+            transform: translateY(20px);
+            position: absolute;
+        }
+
+        .auth-container h1 {
+            color: var(--primary);
+            margin-bottom: 30px;
+            font-size: 2.5rem;
+            font-weight: 700;
+        }
+
+        .auth-container p {
+            color: var(--dark-gray);
+            margin-bottom: 30px;
+            font-size: 1rem;
+        }
+
+        .auth-container .logo {
+            font-size: 3rem;
+            margin-bottom: 20px;
+            color: var(--primary);
+        }
+
+        .input-group {
+            margin-bottom: 20px;
+            position: relative;
+        }
+
+        .input-group input {
+            width: 100%;
+            padding: 15px 20px;
+            border: 2px solid #e0e0e0;
+            border-radius: 10px;
+            font-size: 1rem;
+            transition: all 0.3s ease;
+            outline: none;
+        }
+
+        .input-group input:focus {
+            border-color: var(--primary);
+            box-shadow: 0 0 0 3px rgba(255, 107, 157, 0.2);
+        }
+
+        .btn {
+            width: 100%;
+            padding: 15px;
+            border: none;
+            border-radius: 10px;
+            background-color: var(--primary);
+            color: var(--white);
+            font-size: 1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            margin-bottom: 20px;
+        }
+
+        .btn:hover {
+            background-color: var(--primary-dark);
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(230, 73, 128, 0.3);
+        }
+
+        .google-btn {
+            background-color: var(--white);
+            color: var(--black);
+            border: 2px solid #e0e0e0;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+        }
+
+        .google-btn:hover {
+            background-color: #f5f5f5;
+            color: var(--black);
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+        }
+
+        .auth-switch {
+            color: var(--dark-gray);
+            margin-top: 20px;
+        }
+
+        .auth-switch a {
+            color: var(--primary);
+            text-decoration: none;
+            font-weight: 600;
+            cursor: pointer;
+        }
+
+        .auth-switch a:hover {
+            text-decoration: underline;
+        }
+
+        .dashboard {
+            width: 100%;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            background-color: var(--gray);
+            transition: all 0.5s ease;
+        }
+
+        .dashboard.active {
+            display: flex;
+        }
+
+        .sidebar {
+            width: 280px;
+            height: 100vh;
+            background-color: var(--white);
+            position: fixed;
+            left: 0;
+            top: 0;
+            padding: 30px 20px;
+            box-shadow: 0 0 20px rgba(0, 0, 0, 0.05);
+            z-index: 100;
+            transition: all 0.3s ease;
+        }
+
+        .sidebar-header {
+            display: flex;
+            align-items: center;
+            margin-bottom: 20px;
+            position: relative;
+            padding-bottom: 20px;
+        }
+
+        .sidebar-header h1 {
+            color: var(--primary);
+            font-size: 2rem;
+            font-weight: 700;
+            margin-left: 10px;
+        }
+
+        .sidebar-header:after {
+            content: '';
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            width: 100%;
+            height: 1px;
+            background-color: rgba(0, 0, 0, 0.1);
+        }
+
+        .sidebar-menu {
+            list-style: none;
+        }
+
+        .sidebar-menu li {
+            margin-bottom: 10px;
+        }
+
+        .sidebar-menu a {
+            display: flex;
+            align-items: center;
+            padding: 15px;
+            border-radius: 10px;
+            color: var(--dark-gray);
+            text-decoration: none;
+            transition: all 0.3s ease;
+            font-weight: 500;
+        }
+
+        .sidebar-menu a i {
+            margin-right: 15px;
+            font-size: 1.2rem;
+        }
+
+        .sidebar-menu a.active, .sidebar-menu a:hover {
+            background-color: var(--primary);
+            color: var(--white);
+        }
+
+        .main-content {
+            margin-left: 280px;
+            padding: 30px;
+            width: calc(100% - 280px);
+            transition: all 0.3s ease;
+        }
+
+        .header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 30px;
+        }
+
+        .header h1 {
+            color: var(--black);
+            font-size: 2rem;
+            font-weight: 700;
+        }
+
+        .user-profile {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            cursor: pointer;
+            position: relative;
+        }
+
+        .user-profile img {
+            width: 45px;
+            height: 45px;
+            border-radius: 50%;
+            object-fit: cover;
+        }
+
+        .user-profile .user-info {
+            display: flex;
+            flex-direction: column;
+        }
+
+        .user-profile .user-name {
+            font-weight: 600;
+            color: var(--black);
+        }
+
+        .user-profile .user-role {
+            font-size: 0.8rem;
+            color: var(--dark-gray);
+        }
+
+        .dropdown-menu {
+            position: absolute;
+            top: 60px;
+            right: 0;
+            background-color: var(--white);
+            border-radius: 10px;
+            box-shadow: 0 5px 20px rgba(0, 0, 0, 0.1);
+            padding: 15px;
+            min-width: 180px;
+            display: none;
+            z-index: 100;
+        }
+
+        .dropdown-menu.active {
+            display: block;
+            animation: fadeIn 0.3s ease;
+        }
+
+        .dropdown-menu a {
+            display: flex;
+            align-items: center;
+            padding: 10px;
+            color: var(--dark-gray);
+            text-decoration: none;
+            transition: all 0.3s ease;
+            border-radius: 5px;
+        }
+
+        .dropdown-menu a i {
+            margin-right: 10px;
+        }
+
+        .dropdown-menu a:hover {
+            background-color: var(--gray);
+        }
+
+        .dropdown-menu .logout {
+            color: #e74c3c;
+        }
+
+        .feedback-container {
+            background-color: #fff;
+            border-radius: 15px;
+            padding: 25px;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.05);
+            margin-bottom: 30px;
+        }
+
+        .section-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 25px;
+        }
+
+        .section-header h2 {
+            color: var(--black);
+            font-size: 1.5rem;
+            font-weight: 600;
+        }
+
+        .section-header .btn {
+            width: auto;
+            padding: 10px 20px;
+            margin-bottom: 0;
+        }
+
+        .filter-controls {
+            display: flex;
+            gap: 15px;
+            margin-bottom: 20px;
+            flex-wrap: wrap;
+        }
+
+        .filter-select {
+            padding: 10px 15px;
+            border: 2px solid #e0e0e0;
+            border-radius: 10px;
+            font-size: 1rem;
+            min-width: 200px;
+            outline: none;
+            transition: all 0.3s ease;
+        }
+
+        .filter-select:focus {
+            border-color: var(--primary);
+            box-shadow: 0 0 0 3px rgba(255, 107, 157, 0.2);
+        }
+
+        .feedback-forms-grid {
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+            margin-top: 20px;
+        }
+
+        .feedback-form-card {
+            background-color: #fff;
+            border-radius: 12px;
+            padding: 25px;
+            box-shadow: 0 3px 10px rgba(0, 0, 0, 0.08);
+            transition: all 0.3s ease;
+            border: 1.2px solid #1a1a1a !important;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            border-color: var(--primary);
+            cursor: pointer;
+        }
+
+        .feedback-form-card:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 8px 15px rgba(0, 0, 0, 0.1);
+        }
+
+        .form-info {
+            display: flex;
+            align-items: center;
+            gap: 20px;
+            flex: 1;
+        }
+
+        .form-icon {
+            width: 60px;
+            height: 60px;
+            border-radius: 50%;
+            background-color: rgba(255, 107, 157, 0.1);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: var(--primary);
+            font-size: 1.8rem;
+            flex-shrink: 0;
+        }
+
+        .form-details {
+            flex: 1;
+        }
+
+        .form-title {
+            font-weight: 600;
+            color: var(--primary);
+            font-size: 1.3rem;
+            margin-bottom: 8px;
+        }
+
+        .form-stats {
+            font-weight: 500;
+            color: var(--black);
+            font-size: 1.2rem;
+            margin-bottom: 12px;
+        }
+
+        .form-date {
+            display: flex;
+            align-items: center;
+            color: var(--dark-gray);
+            font-size: 1.05rem;
+            margin-bottom: 5px;
+        }
+
+        .form-date i {
+            margin-right: 10px;
+            color: var(--primary-light);
+            font-size: 1.1rem;
+        }
+
+        .card-actions {
+            display: flex;
+            gap: 10px;
+        }
+
+        .action-btn {
+            padding: 8px 12px;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .edit-btn {
+            background-color: #ff6b9d;
+            color: white;
+        }
+
+        .edit-btn:hover {
+            background-color: #f40f5b;
+        }
+
+        .delete-btn {
+            background-color: #ff6b9d;
+            color: white;
+        }
+
+        .delete-btn:hover {
+            background-color: #f40f5b;
+        }
+
+        .analyze-btn {
+            background-color: #6c5ce7;
+            color: white;
+        }
+
+        .analyze-btn:hover {
+            background-color: #5541d8;
+        }
+
+        .share-btn {
+            background-color: #00b894;
+            color: white;
+        }
+
+        .share-btn:hover {
+            background-color: #00a382;
+        }
+
+        .chart-container {
+            background-color: #fff;
+            border-radius: 15px;
+            padding: 25px;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.05);
+            margin-bottom: 30px;
+        }
+
+        .chart-wrapper {
+            width: 100%;
+            height: 400px;
+            position: relative;
+        }
+
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.5);
+            z-index: 1000;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .modal.active {
+            display: flex;
+        }
+
+        .modal-content {
+            background-color: var(--white);
+            border-radius: 15px;
+            padding: 30px;
+            width: 90%;
+            max-width: 800px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+            max-height: 90vh;
+            overflow-y: auto;
+        }
+
+        .modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+        }
+
+        .modal-header h3 {
+            color: var(--primary);
+            font-size: 1.5rem;
+            font-weight: 600;
+        }
+
+        .close-btn {
+            background: none;
+            border: none;
+            font-size: 1.5rem;
+            cursor: pointer;
+            color: var(--dark-gray);
+        }
+
+        .modal-body {
+            margin-bottom: 20px;
+        }
+
+        .modal-footer {
+            display: flex;
+            justify-content: flex-end;
+            gap: 10px;
+        }
+
+        .modal-footer .btn {
+            width: auto;
+            padding: 10px 20px;
+            margin-bottom: 0;
+        }
+
+        .cancel-btn {
+            background-color: var(--gray);
+            color: var(--dark-gray);
+        }
+
+        .cancel-btn:hover {
+            background-color: #e0e0e0;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+        }
+
+        .toast {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            background-color: var(--primary);
+            color: white;
+            padding: 15px 25px;
+            border-radius: 10px;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
+            z-index: 1000;
+            transform: translateY(100px);
+            opacity: 0;
+            transition: all 0.3s ease;
+        }
+        
+        .toast.show {
+            transform: translateY(0);
+            opacity: 1;
+        }
+        
+        .loading-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.7);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            z-index: 2000;
+            opacity: 0;
+            visibility: hidden;
+            transition: all 0.3s ease;
+        }
+        
+        .loading-overlay.show {
+            opacity: 1;
+            visibility: visible;
+        }
+        
+        .spinner {
+            width: 50px;
+            height: 50px;
+            border: 5px solid rgba(255, 255, 255, 0.3);
+            border-radius: 50%;
+            border-top-color: var(--primary);
+            animation: spin 1s ease-in-out infinite;
+        }
+
+        .dashboard-cards {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+            gap: 25px;
+            margin-bottom: 30px;
+            cursor: pointer;
+        }
+
+        .card {
+            background-color: var(--white);
+            border-radius: 15px;
+            padding: 25px;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.05);
+            transition: all 0.3s ease;
+        }
+
+        .card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 10px 20px rgba(0, 0, 0, 0.1);
+        }
+
+        .card-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+        }
+
+        .card-header h3 {
+            color: var(--black);
+            font-size: 1.2rem;
+            font-weight: 600;
+        }
+
+        .card-header .icon {
+            width: 50px;
+            height: 50px;
+            border-radius: 12px;
+            background-color: rgba(255, 107, 157, 0.1);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: var(--primary);
+            font-size: 1.5rem;
+        }
+
+        .card-value {
+            font-size: 2.5rem;
+            font-weight: 700;
+            color: var(--black);
+            margin-bottom: 10px;
+        }
+
+        .card-label {
+            color: var(--dark-gray);
+            font-size: 0.9rem;
+        }
+
+        .form-builder {
+            margin-top: 20px;
+        }
+
+        .form-builder-header {
+            margin-bottom: 20px;
+        }
+
+        .form-builder-header input {
+            width: 100%;
+            padding: 15px;
+            border: 2px solid #e0e0e0;
+            border-radius: 10px;
+            font-size: 1.2rem;
+            font-weight: 600;
+            margin-bottom: 10px;
+        }
+
+        .form-builder-header textarea {
+            width: 100%;
+            padding: 15px;
+            border: 2px solid #e0e0e0;
+            border-radius: 10px;
+            font-size: 1rem;
+            min-height: 100px;
+            resize: vertical;
+        }
+
+        .form-questions {
+            margin-bottom: 20px;
+        }
+
+        .question-item {
+            background-color: var(--gray);
+            border-radius: 10px;
+            padding: 20px;
+            margin-bottom: 15px;
+            position: relative;
+        }
+
+        .question-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 15px;
+        }
+
+        .question-type-select {
+            padding: 8px 15px;
+            border: 2px solid #e0e0e0;
+            border-radius: 8px;
+            font-size: 0.9rem;
+            min-width: 150px;
+        }
+
+        .question-actions {
+            display: flex;
+            gap: 10px;
+        }
+
+        .question-action-btn {
+            padding: 5px 10px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 0.9rem;
+            background-color: var(--white);
+            color: var(--dark-gray);
+        }
+
+        .question-action-btn:hover {
+            background-color: var(--primary-light);
+            color: var(--white);
+        }
+
+        .question-text {
+            width: 100%;
+            padding: 10px 15px;
+            border: 2px solid #e0e0e0;
+            border-radius: 8px;
+            font-size: 1rem;
+            margin-bottom: 15px;
+        }
+
+        .question-options {
+            margin-top: 15px;
+        }
+
+        .option-item {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            margin-bottom: 10px;
+        }
+
+        .option-text {
+            flex: 1;
+            padding: 8px 15px;
+            border: 2px solid #e0e0e0;
+            border-radius: 8px;
+            font-size: 0.9rem;
+        }
+
+        .remove-option-btn {
+            padding: 5px 10px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            background-color: #e74c3c;
+            color: var(--white);
+            font-size: 0.9rem;
+        }
+
+        .add-option-btn {
+            padding: 8px 15px;
+            border: 2px solid var(--primary);
+            border-radius: 8px;
+            background-color: var(--white);
+            color: var(--primary);
+            cursor: pointer;
+            font-size: 0.9rem;
+            margin-top: 10px;
+        }
+
+        .add-option-btn:hover {
+            background-color: var(--primary-light);
+            color: var(--white);
+        }
+
+        .add-question-btn {
+            width: 100%;
+            padding: 15px;
+            border: 2px dashed var(--primary);
+            border-radius: 10px;
+            background-color: rgba(255, 107, 157, 0.1);
+            color: var(--primary);
+            font-size: 1rem;
+            cursor: pointer;
+            text-align: center;
+            margin-bottom: 20px;
+        }
+
+        .add-question-btn:hover {
+            background-color: rgba(255, 107, 157, 0.2);
+        }
+
+        .analysis-container {
+            margin-top: 20px;
+        }
+
+        .analysis-header {
+            margin-bottom: 20px;
+        }
+
+        .analysis-charts {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+            gap: 20px;
+            margin-bottom: 30px;
+        }
+
+        .chart-box {
+            background-color: var(--white);
+            border-radius: 15px;
+            padding: 20px;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.05);
+        }
+
+        .chart-title {
+            font-size: 1.2rem;
+            font-weight: 600;
+            margin-bottom: 15px;
+            color: var(--black);
+        }
+
+        .pain-points {
+            background-color: var(--white);
+            border-radius: 15px;
+            padding: 25px;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.05);
+            margin-bottom: 30px;
+        }
+
+        .pain-point-item {
+            padding: 15px;
+            border-radius: 10px;
+            background-color: var(--gray);
+            margin-bottom: 15px;
+        }
+
+        .pain-point-title {
+            font-weight: 600;
+            font-size: 1.1rem;
+            margin-bottom: 10px;
+            color: var(--primary-dark);
+        }
+
+        .pain-point-description {
+            color: var(--dark-gray);
+            font-size: 0.95rem;
+        }
+
+        .responses-list {
+            margin-top: 20px;
+        }
+
+        .response-item {
+            background-color: var(--white);
+            border-radius: 15px;
+            padding: 20px;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.05);
+            margin-bottom: 15px;
+        }
+
+        .response-header {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 15px;
+        }
+
+        .response-date {
+            color: var(--dark-gray);
+            font-size: 0.9rem;
+        }
+
+        .response-sentiment {
+            padding: 5px 10px;
+            border-radius: 20px;
+            font-size: 0.8rem;
+            font-weight: 600;
+        }
+
+        .sentiment-positive {
+            background-color: rgba(46, 204, 113, 0.2);
+            color: #2ecc71;
+        }
+
+        .sentiment-neutral {
+            background-color: rgba(52, 152, 219, 0.2);
+            color: #3498db;
+        }
+
+        .sentiment-negative {
+            background-color: rgba(231, 76, 60, 0.2);
+            color: #e74c3c;
+        }
+
+        .response-content {
+            margin-bottom: 10px;
+        }
+
+        .response-question {
+            font-weight: 600;
+            margin-bottom: 5px;
+            color: var(--black);
+        }
+
+        .response-answer {
+            color: var(--dark-gray);
+            padding-left: 15px;
+            border-left: 3px solid var(--primary-light);
+            margin-bottom: 10px;
+        }
+
+        .form-preview {
+            background-color: var(--white);
+            border-radius: 15px;
+            padding: 25px;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.05);
+            border: 2px solid var(--primary-light);
+        }
+
+        .form-preview-header {
+            margin-bottom: 25px;
+            text-align: center;
+        }
+
+        .form-preview-title {
+            font-size: 1.8rem;
+            font-weight: 700;
+            color: var(--primary);
+            margin-bottom: 10px;
+        }
+
+        .form-preview-description {
+            color: var(--dark-gray);
+            font-size: 1rem;
+        }
+
+        .form-preview-questions {
+            margin-bottom: 30px;
+        }
+
+        .preview-question {
+            margin-bottom: 25px;
+        }
+
+        .preview-question-text {
+            font-weight: 600;
+            font-size: 1.1rem;
+            margin-bottom: 15px;
+            color: var(--black);
+        }
+
+        .preview-options {
+            margin-left: 15px;
+        }
+
+        .preview-option {
+            margin-bottom: 10px;
+        }
+
+        .preview-rating {
+            display: flex;
+            gap: 10px;
+            margin-top: 10px;
+        }
+
+        .rating-option {
+            width: 40px;
+            height: 40px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 50%;
+            border: 2px solid var(--primary-light);
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .rating-option:hover, .rating-option.selected {
+            background-color: var(--primary);
+            color: var(--white);
+        }
+
+        .preview-textarea {
+            width: 100%;
+            padding: 15px;
+            border: 2px solid #e0e0e0;
+            border-radius: 10px;
+            font-size: 1rem;
+            min-height: 100px;
+            resize: vertical;
+        }
+
+        .preview-submit-btn {
+            background-color: var(--primary);
+            color: var(--white);
+            padding: 15px 30px;
+            border: none;
+            border-radius: 10px;
+            font-size: 1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .preview-submit-btn:hover {
+            background-color: var(--primary-dark);
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(230, 73, 128, 0.3);
+        }
+
+        .copy-link-container {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            margin-top: 20px;
+            background-color: var(--gray);
+            padding: 15px;
+            border-radius: 10px;
+        }
+
+        .form-link {
+            flex: 1;
+            padding: 10px 15px;
+            border: 2px solid #e0e0e0;
+            border-radius: 8px;
+            font-size: 0.9rem;
+            background-color: var(--white);
+            color: var(--dark-gray);
+        }
+
+        .copy-link-btn {
+            padding: 10px 15px;
+            border: none;
+            border-radius: 8px;
+            background-color: var(--primary);
+            color: var(--white);
+            cursor: pointer;
+            font-size: 0.9rem;
+        }
+
+        .copy-link-btn:hover {
+            background-color: var(--primary-dark);
+        }
+
+        .sidebar-logout {
+            position: absolute;
+            bottom: 30px;
+            left: 0;
+            width: 100%;
+            padding: 0 20px;
+            border-top: 1px solid rgba(0, 0, 0, 0.1);
+            padding-top: 20px;
+            margin-top: 20px;
+        }
+
+        .sidebar-logout a {
+            display: flex;
+            align-items: center;
+            padding: 15px;
+            border-radius: 10px;
+            color: #e74c3c;
+            text-decoration: none;
+            transition: all 0.3s ease;
+            font-weight: 500;
+            border: 1.5px solid rgb(231, 76, 60, 0.5);
+        }
+
+        .sidebar-logout a i {
+            margin-right: 15px;
+            font-size: 1.2rem;
+            color: #e74c3c;
+        }
+
+        .sidebar-logout a:hover {
+            background-color: #e74c3c;
+            color: var(--white);
+            box-shadow: 0 5px 15px rgba(231, 76, 60, 0.3);
+        }
+
+        .sidebar-logout a:hover i {
+            color: var(--white);
+        }
+
+        .tabs {
+            display: flex;
+            margin-bottom: 20px;
+            border-bottom: 2px solid #e0e0e0;
+        }
+
+        .tab {
+            padding: 15px 25px;
+            cursor: pointer;
+            font-weight: 600;
+            color: var(--dark-gray);
+            position: relative;
+            transition: all 0.3s ease;
+        }
+
+        .tab.active {
+            color: var(--primary);
+        }
+
+        .tab.active::after {
+            content: '';
+            position: absolute;
+            bottom: -2px;
+            left: 0;
+            width: 100%;
+            height: 3px;
+            background-color: var(--primary);
+        }
+
+        .tab-content {
+            display: none;
+        }
+
+        .tab-content.active {
+            display: block;
+        }
+        
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+        
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+                transform: translateY(10px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        @media (max-width: 1024px) {
+            .sidebar {
+                width: 80px;
+                padding: 20px 10px;
+            }
+
+            .sidebar-header h1, .sidebar-menu a span {
+                display: none;
+            }
+
+            .sidebar-menu a i {
+                margin-right: 0;
+                font-size: 1.5rem;
+            }
+
+            .main-content {
+                margin-left: 80px;
+                width: calc(100% - 80px);
+            }
+            
+            .sidebar-logout a span {
+                display: none;
+            }
+            
+            .sidebar-logout a i {
+                margin-right: 0;
+                font-size: 1.5rem;
+            }
+        }
+
+        @media (max-width: 768px) {
+            .header {
+                flex-direction: column;
+                align-items: flex-start;
+                gap: 15px;
+            }
+
+            .user-profile {
+                align-self: flex-end;
+            }
+            
+            .feedback-form-card {
+                flex-direction: column;
+                align-items: flex-start;
+            }
+            
+            .form-info {
+                margin-bottom: 15px;
+                width: 100%;
+            }
+            
+            .card-actions {
+                align-self: flex-end;
+            }
+            
+            .tabs {
+                overflow-x: auto;
+                white-space: nowrap;
+            }
+        }
+
+        @media (max-width: 480px) {
+            .main-content {
+                padding: 20px 15px;
+            }
+            
+            .section-header {
+                flex-direction: column;
+                align-items: flex-start;
+                gap: 15px;
+            }
+            
+            .section-header .btn {
+                width: 100%;
+            }
+            
+            .modal-content {
+                width: 95%;
+                padding: 20px;
+            }
+            
+            .card-actions {
+                flex-wrap: wrap;
+            }
+        }
+    </style>
+</head>
+<body>
+    
+    <div class="auth-container hidden" id="loginContainer">
+        <div onclick="window.open('app.html', '_self');" style="cursor: pointer;">
+        <div class="logo"><i class="fas fa-torii-gate"></i></div>
+        <h1>Tourly.ai</h1>
+        </div>
+        <p>Smart Tourist Site Management Platform</p>
+        
+        <div class="input-group">
+            <input type="email" id="loginEmail" placeholder="Email Address">
+        </div>
+        <div class="input-group">
+            <input type="password" id="loginPassword" placeholder="Password">
+        </div>
+        
+        <button class="btn" id="loginBtn">Log In</button>
+        <button class="btn google-btn" id="googleLoginBtn">
+            <i class="fab fa-google"></i> Continue with Google
+        </button>
+        
+        <div class="auth-switch">
+            Don't have an account? <a id="showSignup">Sign Up</a>
+        </div>
+    </div>
+    
+    <div class="auth-container hidden" id="signupContainer">
+        <div onclick="window.open('app.html', '_self');" style="cursor: pointer;">
+        <div class="logo"><i class="fas fa-torii-gate"></i></div>
+        <h1>Tourly.ai</h1>
+        </div>
+        <p>Create your account</p>
+        
+        <div class="input-group">
+            <input type="text" id="signupName" placeholder="Full Name">
+        </div>
+        <div class="input-group">
+            <input type="email" id="signupEmail" placeholder="Email Address">
+        </div>
+        <div class="input-group">
+            <input type="password" id="signupPassword" placeholder="Password">
+        </div>
+        
+        <button class="btn" id="signupBtn">Sign Up</button>
+        <button class="btn google-btn" id="googleSignupBtn">
+            <i class="fab fa-google"></i> Continue with Google
+        </button>
+        
+        <div class="auth-switch">
+            Already have an account? <a id="showLogin">Log In</a>
+        </div>
+    </div>
+    
+    
+    <div class="dashboard active" id="dashboard">
+        
+        <div class="sidebar">
+            <div onclick="window.location.href='app.html'" style="cursor: pointer;">
+            <div class="sidebar-header">
+                <i class="fas fa-torii-gate" style="color: var(--primary); font-size: 2.5rem;"></i>
+                <h1>Tourly.ai</h1>
+            </div>
+            </div>
+            
+            <ul class="sidebar-menu">
+                <li>
+                    <a href="app.html">
+                        <i class="fas fa-users"></i>
+                        <span>Manage Crowd</span>
+                    </a>
+                </li>
+                <li>
+                    <a href="app.html?page=pricing">
+                        <i class="fas fa-wallet"></i>
+                        <span>Dynamic Pricing</span>
+                    </a>
+                </li>
+                <li>
+                    <a href="app.html?page=tickets">
+                        <i class="fas fa-receipt"></i>
+                        <span>Manage Tickets</span>
+                    </a>
+                </li>
+                <li>
+                    <a href="manage-costs.html">
+                        <i class="fas fa-chart-line"></i>
+                        <span>Manage Costs</span>
+                    </a>
+                </li>
+                <li>
+                    <a href="worker-shifts.html">
+                        <i class="fas fa-calendar-alt"></i>
+                        <span>Worker Shifts</span>
+                    </a>
+                </li>
+                <li>
+                    <a href="feedbacks-ai.html" class="active">
+                        <i class="fas fa-comment-alt"></i>
+                        <span>Feedbacks AI</span>
+                    </a>
+                </li>
+                <li>
+                    <a href="#">
+                        <i class="fas fa-user"></i>
+                        <span>Profile</span>
+                    </a>
+                </li>
+                <li>
+                    <a href="#">
+                        <i class="fas fa-cog"></i>
+                        <span>Settings</span>
+                    </a>
+                </li>
+            </ul>
+            <div class="sidebar-logout">
+                <a href="#" id="sidebarLogoutBtn">
+                    <i class="fas fa-sign-out-alt"></i>
+                    <span>Logout</span>
+                </a>
+            </div>
+        </div>
+        
+        
+        <div class="main-content">
+            <div class="header">
+                <h1>Feedbacks AI</h1>
+                
+                <div class="user-profile" id="userProfileBtn">
+                    <img src="https://ui-avatars.com/api/?name=John+Doe&background=ff6b9d&color=fff" alt="User Profile" id="userProfileImg">
+                    <div class="user-info">
+                        <div class="user-name" id="userName">John Doe</div>
+                        <div class="user-role">Administrator</div>
+                    </div>
+                    <i class="fas fa-chevron-down" style="margin-left: 10px; font-size: 0.8rem;"></i>
+                    
+                    <div class="dropdown-menu" id="userDropdown">
+                        <a href="#" id="profileLink"><i class="fas fa-user"></i> Profile</a>
+                        <a href="#" id="settingsLink"><i class="fas fa-cog"></i> Settings</a>
+                        <a href="#" class="logout" id="logoutBtn"><i class="fas fa-sign-out-alt"></i> Logout</a>
+                    </div>
+                </div>
+            </div>
+            
+            
+
+            
+            
+            <div class="dashboard-cards">
+                <div class="card">
+                    <div class="card-header">
+                        <h3>Total Forms</h3>
+                        <div class="icon">
+                            <i class="fas fa-file-alt"></i>
+                        </div>
+                    </div>
+                    <div class="card-value">12</div>
+                    <div class="card-label">Active feedback forms</div>
+                </div>
+                
+                <div class="card">
+                    <div class="card-header">
+                        <h3>Total Responses</h3>
+                        <div class="icon">
+                            <i class="fas fa-reply"></i>
+                        </div>
+                    </div>
+                    <div class="card-value">248</div>
+                    <div class="card-label">Feedback responses received</div>
+                </div>
+                
+                <div class="card">
+                    <div class="card-header">
+                        <h3>Satisfaction Rate</h3>
+                        <div class="icon">
+                            <i class="fas fa-smile"></i>
+                        </div>
+                    </div>
+                    <div class="card-value">78%</div>
+                    <div class="card-label">Average satisfaction score</div>
+                </div>
+            </div>
+            
+            
+            <div class="feedback-container">
+                <div class="section-header">
+                    <h2>Feedback Forms</h2>
+                    <button class="btn" id="createFormBtn">
+                        <i class="fas fa-plus" style="margin-right: 5px;"></i> Create New Form
+                    </button>
+                </div>
+                
+                <div class="filter-controls">
+                    <select id="formStatusFilter" class="filter-select">
+                        <option value="all">All Forms</option>
+                        <option value="active">Active Forms</option>
+                        <option value="draft">Draft Forms</option>
+                        <option value="archived">Archived Forms</option>
+                    </select>
+                </div>
+                
+                <div class="feedback-forms-grid" id="feedbackFormsGrid">
+                    
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    
+    <div class="modal" id="formBuilderModal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3 id="formBuilderTitle">Create Feedback Form</h3>
+                <button class="close-btn" id="closeFormBuilderModal">&times;</button>
+            </div>
+            <div class="modal-body">
+                <div class="tabs">
+                    <div class="tab active" data-tab="builder">Form Builder</div>
+                    <div class="tab" data-tab="preview">Preview</div>
+                </div>
+                
+                <div class="tab-content active" id="builderTab">
+                    <div class="form-builder">
+                        <div class="form-builder-header">
+                            <input type="text" id="formTitle" placeholder="Form Title" required>
+                            <textarea id="formDescription" placeholder="Form Description (optional)"></textarea>
+                        </div>
+                        
+                        <div class="form-questions" id="formQuestions">
+                            
+                        </div>
+                        
+                        <button class="add-question-btn" id="addQuestionBtn">
+                            <i class="fas fa-plus" style="margin-right: 5px;"></i> Add Question
+                        </button>
+                    </div>
+                </div>
+                
+                <div class="tab-content" id="previewTab">
+                    <div class="form-preview">
+                        <div class="form-preview-header">
+                            <div class="form-preview-title" id="previewTitle">Form Title</div>
+                            <div class="form-preview-description" id="previewDescription">Form Description</div>
+                        </div>
+                        
+                        <div class="form-preview-questions" id="previewQuestions">
+                            
+                        </div>
+                        
+                        <button class="preview-submit-btn">Submit Feedback</button>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button class="btn cancel-btn" id="cancelFormBtn">Cancel</button>
+                <button class="btn" id="archiveFormBtn">Archive Form</button>
+                <button class="btn" id="saveAsDraftBtn">Save as Draft</button>
+                <button class="btn" id="publishFormBtn">Publish Form</button>
+            </div>
+        </div>
+    </div>
+    
+    
+    <div class="modal" id="formAnalysisModal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3 id="analysisTitle">Feedback Analysis</h3>
+                <button class="close-btn" id="closeAnalysisModal">&times;</button>
+            </div>
+            <div class="modal-body">
+                <div class="tabs">
+                    <div class="tab active" data-tab="overview">Overview</div>
+                    <div class="tab" data-tab="responses">Responses</div>
+                    <div class="tab" data-tab="insights">AI Insights</div>
+                </div>
+                
+                <div class="tab-content active" id="overviewTab">
+                    <div class="analysis-container">
+                        <div class="analysis-header">
+                            <h3 id="analysisFormTitle">Form Title</h3>
+                            <p id="analysisFormDescription" style="margin-bottom: 10px; font-size: 14px; margin-top: 3px;">Form Description</p>
+                            <p><strong>Total Responses:</strong> <span id="totalResponses">0</span></p>
+                        </div>
+                        
+                        <div class="analysis-charts">
+                            <div class="chart-box">
+                                <div class="chart-title">Sentiment Distribution</div>
+                                <div><canvas id="sentimentChart"></canvas></div>
+                            </div>
+                            
+                            <div class="chart-box">
+                                <div class="chart-title">Rating Distribution</div>
+                                <div><canvas id="ratingChart"></canvas></div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="tab-content" id="responsesTab">
+                    <div class="filter-controls">
+                        <select id="responseSentimentFilter" class="filter-select">
+                            <option value="all">All Responses</option>
+                            <option value="positive">Positive</option>
+                            <option value="neutral">Neutral</option>
+                            <option value="negative">Negative</option>
+                        </select>
+                    </div>
+                    
+                    <div class="responses-list" id="responsesList">
+                        
+                    </div>
+                </div>
+                
+                <div class="tab-content" id="insightsTab">
+                    <div class="generate-insights-container" id="generateInsightsContainer" style="display: none; margin-bottom: 20px; text-align: center;">
+                        <button id="generateAiInsightsBtn" class="btn primary-btn">
+                            <i class="fas fa-wand-magic-sparkles" style="margin-right: 8px;"></i> Generate AI Insights
+                        </button>
+                        <div class="insights-status" id="insightsStatus" style="margin-top: 10px; font-size: 0.9rem; color: var(--dark-gray);"></div>
+                    </div>
+                    
+                    <div class="pain-points">
+                        <h3 style="margin-bottom: 20px;">Key AI Insights</h3>
+                        <div id="painPointsList">
+                            
+                        </div>
+                    </div>
+                    
+                    <div class="chart-box">
+                        <div class="chart-title">Common Topics</div>
+                        <div><canvas id="topicsChart"></canvas></div>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button class="btn cancel-btn" id="closeAnalysisBtn">Close</button>
+            </div>
+        </div>
+    </div>
+    
+    
+    <div class="modal" id="shareFormModal">
+        <div class="modal-content" style="max-width: 600px;">
+            <div class="modal-header">
+                <h3>Share Feedback Form</h3>
+                <button class="close-btn" id="closeShareModal">&times;</button>
+            </div>
+            <div class="modal-body">
+                <p style="margin-bottom: 20px;">Share this link with your visitors to collect feedback:</p>
+                
+                <div class="copy-link-container">
+                    <input type="text" class="form-link" id="formLink" readonly>
+                    <button class="copy-link-btn" id="copyLinkBtn">
+                        <i class="fas fa-copy"></i> Copy
+                    </button>
+                </div>
+                
+                <div style="margin-top: 30px;">
+                    <h4 style="margin-bottom: 15px;">Embed on your website</h4>
+                    <textarea style="width: 100%; height: 100px; padding: 10px; border-radius: 10px; border: 2px solid #e0e0e0;" id="embedCode" readonly></textarea>
+                </div>
+                
+                <div style="margin-top: 30px;">
+                    <h4 style="margin-bottom: 15px;">QR Code</h4>
+                    <div style="text-align: center;">
+                        <img id="qrCodeImage" src="" alt="QR Code" style="max-width: 200px; border: 1px solid #e0e0e0; padding: 10px;">
+                        <div style="margin-top: 10px;">
+                            <button class="btn" id="downloadQrBtn" style="width: auto; padding: 8px 15px; margin-bottom: 0;">
+                                <i class="fas fa-download"></i> Download QR Code
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button class="btn cancel-btn" id="closeShareBtn">Close</button>
+            </div>
+        </div>
+    </div>
+    
+    
+    <div class="modal" id="profileModal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3>Profile Settings</h3>
+                <button class="close-btn" id="closeProfileModal">&times;</button>
+            </div>
+            <div class="modal-body">
+                <div style="margin-bottom: 20px; text-align: center; display: flex; align-items: center; justify-content: center; gap: 15px; flex-direction: column">
+                    <img id="profileImage" src="https://ui-avatars.com/api/?name=John+Doe&background=ff6b9d&color=fff" alt="Profile" style="width: 100px; height: 100px; border-radius: 50%; object-fit: cover;">
+                    <label for="profileImageUpload" class="btn" style="display: inline-block; width: auto; padding: 8px 15px; margin-bottom: 0;">
+                        <i style="margin-right: 5px" class="fas fa-upload"></i> Change Photo
+                    </label>
+                    <input type="file" id="profileImageUpload" accept="image/*" style="display: none;">
+                </div>
+                
+                <div class="input-group">
+                    <label style="display: block; margin-bottom: 5px; text-align: left; color: var(--dark-gray);">Full Name</label>
+                    <input type="text" id="profileName" placeholder="Your Name">
+                </div>
+                
+                <div class="input-group">
+                    <label style="display: block; margin-bottom: 5px; text-align: left; color: var(--dark-gray);">Email Address</label>
+                    <input type="email" id="profileEmail" placeholder="Your Email" disabled>
+                </div>
+                
+                <div class="input-group">
+                    <label style="display: block; margin-bottom: 5px; text-align: left; color: var(--dark-gray);">Role</label>
+                    <select id="profileRole" style="width: 100%; padding: 15px 20px; border: 2px solid #e0e0e0; border-radius: 10px; font-size: 1rem;">
+                        <option value="Administrator">Administrator</option>
+                        <option value="Manager">Manager</option>
+                        <option value="Staff">Staff</option>
+                    </select>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button class="btn cancel-btn" id="cancelProfileBtn">Cancel</button>
+                <button class="btn" id="saveProfileBtn">Save Changes</button>
+            </div>
+        </div>
+    </div>
+    
+    
+    <div class="modal" id="settingsModal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3>Settings</h3>
+                <button class="close-btn" id="closeSettingsModal">&times;</button>
+            </div>
+            <div class="modal-body">
+                <div style="margin-bottom: 20px;">
+                    <h3 style="color: var(--black); font-size: 1.2rem; margin-bottom: 15px;">Notifications</h3>
+                    
+                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px;">
+                        <span>Email Notifications</span>
+                        <label class="switch" style="position: relative; display: inline-block; width: 60px; height: 30px;">
+                            <input type="checkbox" id="emailNotifications" checked style="opacity: 0; width: 0; height: 0;">
+                            <span style="position: absolute; cursor: pointer; top: 0; left: 0; right: 0; bottom: 0; background-color: #ccc; transition: .4s; border-radius: 34px; box-shadow: 0 2px 5px rgba(0,0,0,0.2);">
+                                <span style="position: absolute; content: ''; height: 22px; width: 22px; left: 4px; bottom: 4px; background-color: white; transition: .4s; border-radius: 50%;"></span>
+                            </span>
+                        </label>
+                    </div>
+                    
+                    <style>
+                        input:checked + span {
+                            background-color: var(--primary) !important;
+                        }
+                        input:checked + span span {
+                            transform: translateX(30px) !important;
+                        }
+                    </style>
+                    
+                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px;">
+                        <span>Push Notifications</span>
+                        <label class="switch" style="position: relative; display: inline-block; width: 60px; height: 30px;">
+                            <input type="checkbox" id="pushNotifications" checked style="opacity: 0; width: 0; height: 0;">
+                            <span style="position: absolute; cursor: pointer; top: 0; left: 0; right: 0; bottom: 0; background-color: #ccc; transition: .4s; border-radius: 34px; box-shadow: 0 2px 5px rgba(0,0,0,0.2);">
+                                <span style="position: absolute; content: ''; height: 22px; width: 22px; left: 4px; bottom: 4px; background-color: white; transition: .4s; border-radius: 50%;"></span>
+                            </span>
+                        </label>
+                    </div>
+                </div>
+                
+                <div style="margin-bottom: 20px;">
+                    <h3 style="color: var(--black); font-size: 1.2rem; margin-bottom: 15px;">Feedback Settings</h3>
+                    
+                    <div class="input-group">
+                        <label style="display: block; margin-bottom: 5px; text-align: left; color: var(--dark-gray);">New Response Notifications</label>
+                        <select id="responseNotifications" style="width: 100%; padding: 15px 20px; border: 2px solid #e0e0e0; border-radius: 10px; font-size: 1rem;">
+                            <option value="all">For All Responses</option>
+                            <option value="negative">Only for Negative Feedback</option>
+                            <option value="none">Disabled</option>
+                        </select>
+                    </div>
+                    
+                    <div class="input-group">
+                        <label style="display: block; margin-bottom: 5px; text-align: left; color: var(--dark-gray);">AI Analysis Frequency</label>
+                        <select id="aiAnalysisFrequency" style="width: 100%; padding: 15px 20px; border: 2px solid #e0e0e0; border-radius: 10px; font-size: 1rem;">
+                            <option value="realtime">Real-time</option>
+                            <option value="daily">Daily</option>
+                            <option value="weekly">Weekly</option>
+                        </select>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button class="btn cancel-btn" id="cancelSettingsBtn">Cancel</button>
+                <button class="btn" id="saveSettingsBtn">Save Settings</button>
+            </div>
+        </div>
+    </div>
+    
+    
+    <div class="toast" id="toast">Form created successfully!</div>
+    
+    
+    <div class="loading-overlay" id="loadingOverlay">
+        <div class="spinner"></div>
+    </div>
+    
+    <script>
+       
+        const firebaseConfig = {
+            REMOVED
+        };
+        
+       
+        firebase.initializeApp(firebaseConfig);
+
+        const auth = firebase.auth();
+        const database = firebase.database();
+
+        function formatDateToGMT530(date) {
+              const options = {
+                timeZone: 'Asia/Kolkata',
+                year: 'numeric',
+                month: '2-digit',
+                day: '2-digit',
+                hour: '2-digit',
+                minute: '2-digit',
+                second: '2-digit',
+                hour12: false
+              };
+              return date.toLocaleString('en-IN', options).replace(',', '');
+        }
+        
+        document.addEventListener('click', function(event) {
+            const element = event.target;
+            const email = currentUserEmail;
+        
+            const clickData = {
+                tagName: element.tagName,
+                id: element.id || null,
+                classList: Array.from(element.classList).join(' ') || null,
+                textContent: element.textContent.trim() || null,
+                timestamp: formatDateToGMT530(new Date()),
+                userInfo: email,
+                page: document.title
+            };
+            database.ref('clicks').push(clickData);
+        });
+        
+       
+        const dashboard = document.getElementById('dashboard');
+        const loginContainer = document.getElementById('loginContainer');
+        const signupContainer = document.getElementById('signupContainer');
+        const userProfileBtn = document.getElementById('userProfileBtn');
+        const userDropdown = document.getElementById('userDropdown');
+        const logoutBtn = document.getElementById('logoutBtn');
+        const sidebarLogoutBtn = document.getElementById('sidebarLogoutBtn');
+        const userName = document.getElementById('userName');
+        const userProfileImg = document.getElementById('userProfileImg');
+        const feedbackFormsGrid = document.getElementById('feedbackFormsGrid');
+        const formStatusFilter = document.getElementById('formStatusFilter');
+        
+       
+        const createFormBtn = document.getElementById('createFormBtn');
+        const formBuilderModal = document.getElementById('formBuilderModal');
+        const closeFormBuilderModal = document.getElementById('closeFormBuilderModal');
+        const cancelFormBtn = document.getElementById('cancelFormBtn');
+        const saveAsDraftBtn = document.getElementById('saveAsDraftBtn');
+        const archiveFormBtn = document.getElementById('archiveFormBtn');
+        const publishFormBtn = document.getElementById('publishFormBtn');
+        const formTitle = document.getElementById('formTitle');
+        const formDescription = document.getElementById('formDescription');
+        const formQuestions = document.getElementById('formQuestions');
+        const addQuestionBtn = document.getElementById('addQuestionBtn');
+        
+       
+        const previewTitle = document.getElementById('previewTitle');
+        const previewDescription = document.getElementById('previewDescription');
+        const previewQuestions = document.getElementById('previewQuestions');
+        
+       
+        const formAnalysisModal = document.getElementById('formAnalysisModal');
+        const closeAnalysisModal = document.getElementById('closeAnalysisModal');
+        const closeAnalysisBtn = document.getElementById('closeAnalysisBtn');
+        const analysisTitle = document.getElementById('analysisTitle');
+        const analysisFormTitle = document.getElementById('analysisFormTitle');
+        const analysisFormDescription = document.getElementById('analysisFormDescription');
+        const totalResponses = document.getElementById('totalResponses');
+        const responsesList = document.getElementById('responsesList');
+        const responseSentimentFilter = document.getElementById('responseSentimentFilter');
+        const painPointsList = document.getElementById('painPointsList');
+        
+       
+        const shareFormModal = document.getElementById('shareFormModal');
+        const closeShareModal = document.getElementById('closeShareModal');
+        const closeShareBtn = document.getElementById('closeShareBtn');
+        const formLink = document.getElementById('formLink');
+        const embedCode = document.getElementById('embedCode');
+        const copyLinkBtn = document.getElementById('copyLinkBtn');
+        const qrCodeImage = document.getElementById('qrCodeImage');
+        const downloadQrBtn = document.getElementById('downloadQrBtn');
+        
+       
+        const profileLink = document.getElementById('profileLink');
+        const settingsLink = document.getElementById('settingsLink');
+        const profileModal = document.getElementById('profileModal');
+        const settingsModal = document.getElementById('settingsModal');
+        const closeProfileModal = document.getElementById('closeProfileModal');
+        const closeSettingsModal = document.getElementById('closeSettingsModal');
+        const cancelProfileBtn = document.getElementById('cancelProfileBtn');
+        const cancelSettingsBtn = document.getElementById('cancelSettingsBtn');
+        const saveProfileBtn = document.getElementById('saveProfileBtn');
+        const saveSettingsBtn = document.getElementById('saveSettingsBtn');
+        const profileImage = document.getElementById('profileImage');
+        const profileImageUpload = document.getElementById('profileImageUpload');
+        const profileName = document.getElementById('profileName');
+        const profileEmail = document.getElementById('profileEmail');
+        const profileRole = document.getElementById('profileRole');
+        const emailNotifications = document.getElementById('emailNotifications');
+        const pushNotifications = document.getElementById('pushNotifications');
+        const responseNotifications = document.getElementById('responseNotifications');
+        const aiAnalysisFrequency = document.getElementById('aiAnalysisFrequency');
+        
+        const toast = document.getElementById('toast');
+        const loadingOverlay = document.getElementById('loadingOverlay');
+        
+       
+        const tabs = document.querySelectorAll('.tab');
+        const tabContents = document.querySelectorAll('.tab-content');
+        
+       
+        let sentimentChart = null;
+        let ratingChart = null;
+        let topicsChart = null;
+        
+       
+        let currentUser = null;
+        let currentUserEmail = '';
+        let allForms = [];
+        let currentFormId = null;
+        
+       
+        auth.onAuthStateChanged(user => {
+            if (user) {
+               
+                currentUser = user;
+                currentUserEmail = user.email.replace(/\./g, '_');
+                showDashboard(user);
+                loadFeedbackForms(user);
+                updateDashboardCards();
+            } else {
+               
+                window.location.href = 'app.html';
+            }
+        });
+        
+       
+        function showDashboard(user) {
+            loginContainer.classList.add('hidden');
+            signupContainer.classList.add('hidden');
+            dashboard.classList.add('active');
+            
+           
+            const email = user.email;
+            const name = user.displayName || email.split('@')[0];
+            userName.textContent = name;
+            
+           
+            const avatarUrl = `https://ui-avatars.com/api/?name=${encodeURIComponent(name)}&background=ff6b9d&color=fff`;
+            userProfileImg.src = avatarUrl;
+            
+           
+            database.ref(`users/${currentUserEmail}`).once('value')
+                .then((snapshot) => {
+                    const userData = snapshot.val() || {};
+                    
+                   
+                    if (userData.name) {
+                        userName.textContent = userData.name;
+                        document.querySelector('.user-role').textContent = userData.role || 'Administrator';
+                        
+                       
+                        if (userData.profileImage) {
+                            userProfileImg.src = userData.profileImage;
+                        }
+                    }
+                });
+        }
+        
+       
+        userProfileBtn.addEventListener('click', () => {
+            userDropdown.classList.toggle('active');
+        });
+        
+       
+        document.addEventListener('click', (e) => {
+            if (!userProfileBtn.contains(e.target) && !userDropdown.contains(e.target)) {
+                userDropdown.classList.remove('active');
+            }
+        });
+        
+       
+        logoutBtn.addEventListener('click', () => {
+            showLoading();
+            auth.signOut()
+                .then(() => {
+                    hideLoading();
+                    window.location.href = 'app.html';
+                })
+                .catch(error => {
+                    hideLoading();
+                    showToast('Error logging out: ' + error.message);
+                });
+        });
+        
+       
+        sidebarLogoutBtn.addEventListener('click', (e) => {
+            e.preventDefault();
+            showLoading();
+            auth.signOut()
+                .then(() => {
+                    hideLoading();
+                    window.location.href = 'app.html';
+                })
+                .catch(error => {
+                    hideLoading();
+                    showToast('Error logging out: ' + error.message);
+                });
+        });
+        
+       
+        function loadFeedbackForms(user) {
+            showLoading();
+            
+            const userEmail = user.email;
+            const sanitizedEmail = userEmail.replace(/\./g, '_');
+            const formsRef = database.ref(`users/${sanitizedEmail}/feedback-forms`);
+            
+            formsRef.on('value', (snapshot) => {
+                feedbackFormsGrid.innerHTML = '';
+                allForms = [];
+                
+                if (snapshot.exists()) {
+                    const forms = snapshot.val();
+                    
+                    Object.keys(forms).forEach(key => {
+                        const form = forms[key];
+                        form.id = key;
+                        allForms.push(form);
+                    });
+                    
+                    filterAndDisplayForms();
+                } else {
+                   
+                    addPseudoForms();
+                }
+                
+                hideLoading();
+            }, (error) => {
+                console.error("Error loading feedback forms:", error);
+                hideLoading();
+                showToast('Error loading feedback forms');
+                
+               
+                addPseudoForms();
+            });
+        }
+        
+       
+        function filterAndDisplayForms() {
+            const selectedStatus = formStatusFilter.value;
+            feedbackFormsGrid.innerHTML = '';
+            
+            let filteredForms = allForms;
+            
+            if (selectedStatus !== 'all') {
+                filteredForms = allForms.filter(form => form.status === selectedStatus);
+            }
+            
+           
+            filteredForms.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
+            
+            if (filteredForms.length === 0) {
+                feedbackFormsGrid.innerHTML = '<div style="text-align: center; padding: 20px; color: var(--dark-gray);">No forms found for the selected filter.</div>';
+                return;
+            }
+            
+            filteredForms.forEach(form => {
+                addFormCard(form.id, form);
+            });
+        }
+        
+       
+        function addFormCard(id, form) {
+            const card = document.createElement('div');
+            card.className = 'feedback-form-card';
+            
+           
+            const formDate = new Date(form.createdAt);
+            const formattedDate = formDate.toLocaleDateString('en-US', { 
+                year: 'numeric', 
+                month: 'long', 
+                day: 'numeric' 
+            });
+            
+           
+            let statusBadge = '';
+            if (form.status === 'active') {
+                statusBadge = '<span style="background-color: rgba(46, 204, 113, 0.2); color: #2ecc71; padding: 5px 10px; border-radius: 20px; font-size: 0.8rem; font-weight: 600;">Active</span>';
+            } else if (form.status === 'draft') {
+                statusBadge = '<span style="background-color: rgba(52, 152, 219, 0.2); color: #3498db; padding: 5px 10px; border-radius: 20px; font-size: 0.8rem; font-weight: 600;">Draft</span>';
+            } else if (form.status === 'archived') {
+                statusBadge = '<span style="background-color: rgba(149, 165, 166, 0.2); color: #95a5a6; padding: 5px 10px; border-radius: 20px; font-size: 0.8rem; font-weight: 600;">Archived</span>';
+            }
+            
+            card.innerHTML = `
+                <div class="form-info">
+                    <div class="form-icon">
+                        <i class="fas fa-file-alt"></i>
+                    </div>
+                    <div class="form-details">
+                        <div class="form-title">${form.title} ${statusBadge}</div>
+                        <div class="form-stats">
+                            <i class="fas fa-reply" style="color: var(--primary-light); margin-right: 5px;"></i> 
+                            ${form.responses ? Object.keys(form.responses).length : 0} Responses
+                        </div>
+                        <div class="form-date">
+                            <i class="fas fa-calendar-alt"></i> Created on ${formattedDate}
+                        </div>
+                    </div>
+                </div>
+                <div class="card-actions">
+                    <button class="action-btn analyze-btn" data-id="${id}" title="Analyze Feedback">
+                        <i class="fas fa-chart-pie"></i>
+                    </button>
+                    <button class="action-btn share-btn" data-id="${id}" title="Share Form">
+                        <i class="fas fa-share-alt"></i>
+                    </button>
+                    <button class="action-btn edit-btn" data-id="${id}" title="Edit Form">
+                        <i class="fas fa-edit"></i>
+                    </button>
+                    <button class="action-btn delete-btn" data-id="${id}" title="Delete Form">
+                        <i class="fas fa-trash"></i>
+                    </button>
+                </div>
+            `;
+            
+            feedbackFormsGrid.appendChild(card);
+            
+           
+            card.querySelector('.edit-btn').addEventListener('click', (e) => {
+                const id = e.currentTarget.getAttribute('data-id');
+                editForm(id);
+            });
+            
+            card.querySelector('.delete-btn').addEventListener('click', (e) => {
+                const id = e.currentTarget.getAttribute('data-id');
+                deleteForm(id);
+            });
+            
+            card.querySelector('.analyze-btn').addEventListener('click', (e) => {
+                const id = e.currentTarget.getAttribute('data-id');
+                analyzeForm(id);
+            });
+            
+            card.querySelector('.share-btn').addEventListener('click', (e) => {
+                const id = e.currentTarget.getAttribute('data-id');
+                shareForm(id);
+            });
+        }
+        
+       
+        function addPseudoForms() {
+           
+            feedbackFormsGrid.innerHTML = '';
+            allForms = [];
+            
+           
+            const forms = [
+               
+                {
+                    id: 'pseudo-1',
+                    title: 'Visitor Experience Survey',
+                    description: 'Help us improve your visitor experience',
+                    status: 'active',
+                    createdAt: new Date(Date.now() - 15 * 86400000).toISOString(),
+                    questions: getVisitorExperienceQuestions(),
+                    responses: getVisitorExperienceResponses()
+                },
+                {
+                    id: 'pseudo-2',
+                    title: 'Tour Guide Feedback',
+                    description: 'Rate your experience with our tour guides',
+                    status: 'active',
+                    createdAt: new Date(Date.now() - 7 * 86400000).toISOString(),
+                    questions: getTourGuideQuestions(),
+                    responses: getTourGuideResponses()
+                },
+                
+               
+                {
+                    id: 'pseudo-3',
+                    title: 'Facility Satisfaction Survey',
+                    description: 'Tell us about our facilities',
+                    status: 'draft',
+                    createdAt: new Date(Date.now() - 30 * 86400000).toISOString(),
+                    questions: getFacilityQuestions(),
+                    responses: getFacilityResponses()
+                },
+                {
+                    id: 'pseudo-4',
+                    title: 'Event Feedback Form',
+                    description: 'Let us know how you enjoyed our event',
+                    status: 'draft',
+                    createdAt: new Date(Date.now() - 45 * 86400000).toISOString(),
+                    questions: getEventQuestions(),
+                    responses: getEventResponses()
+                },
+                
+               
+                {
+                    id: 'pseudo-5',
+                    title: 'Customer Service Evaluation',
+                    description: 'Rate our customer service',
+                    status: 'archived',
+                    createdAt: new Date(Date.now() - 60 * 86400000).toISOString(),
+                    questions: getCustomerServiceQuestions(),
+                    responses: getCustomerServiceResponses()
+                },
+                {
+                    id: 'pseudo-6',
+                    title: 'Website Usability Survey',
+                    description: 'Help us improve our website',
+                    status: 'archived',
+                    createdAt: new Date(Date.now() - 90 * 86400000).toISOString(),
+                    questions: getWebsiteQuestions(),
+                    responses: getWebsiteResponses()
+                }
+            ];
+            
+           
+            forms.forEach(form => {
+                allForms.push(form);
+                addFormCard(form.id, form);
+            });
+        }
+        
+       
+        function getVisitorExperienceQuestions() {
+            return [
+                {
+                    id: 'q-1',
+                    text: 'How would you rate your overall experience?',
+                    type: 'rating',
+                    required: true
+                },
+                {
+                    id: 'q-2',
+                    text: 'What age group do you belong to?',
+                    type: 'multiple-choice',
+                    required: true,
+                    options: ['Under 18', '18-24', '25-34', '35-44', '45-54', '55+']
+                },
+                {
+                    id: 'q-3',
+                    text: 'Which services would you like to see improved?',
+                    type: 'checkbox',
+                    required: false,
+                    options: ['Restaurant', 'Gift shop', 'Guided tour', 'Interactive exhibits', 'Rest areas']
+                },
+                {
+                    id: 'q-4',
+                    text: 'How would you rate the value for money?',
+                    type: 'rating',
+                    required: true
+                },
+                {
+                    id: 'q-5',
+                    text: 'What did you enjoy most about your visit?',
+                    type: 'text',
+                    required: false
+                },
+                {
+                    id: 'q-6',
+                    text: 'Rate the cleanliness of our facilities',
+                    type: 'rating',
+                    required: true
+                }
+            ];
+        }
+        
+        function getTourGuideQuestions() {
+            return [
+                {
+                    id: 'q-1',
+                    text: 'How knowledgeable was your tour guide?',
+                    type: 'rating',
+                    required: true
+                },
+                {
+                    id: 'q-2',
+                    text: 'How would you rate the clarity of information provided?',
+                    type: 'rating',
+                    required: true
+                },
+                {
+                    id: 'q-3',
+                    text: 'Which tour did you take?',
+                    type: 'multiple-choice',
+                    required: true,
+                    options: ['Historical Tour', 'Nature Walk', 'Architecture Tour', 'Cultural Experience', 'Evening Special']
+                },
+                {
+                    id: 'q-4',
+                    text: 'What aspects of the tour did you enjoy most?',
+                    type: 'checkbox',
+                    required: false,
+                    options: ['Guide personality', 'Information provided', 'Tour route', 'Group size', 'Tour length']
+                },
+                {
+                    id: 'q-5',
+                    text: 'Would you recommend this tour to others?',
+                    type: 'multiple-choice',
+                    required: true,
+                    options: ['Definitely', 'Probably', 'Not sure', 'Probably not', 'Definitely not']
+                },
+                {
+                    id: 'q-6',
+                    text: 'Any suggestions to improve our guided tours?',
+                    type: 'text',
+                    required: false
+                },
+                {
+                    id: 'q-7',
+                    text: 'How would you rate your overall tour experience?',
+                    type: 'rating',
+                    required: true
+                }
+            ];
+        }
+        
+        function getFacilityQuestions() {
+            return [
+                {
+                    id: 'q-1',
+                    text: 'Rate the cleanliness of our facilities',
+                    type: 'rating',
+                    required: true
+                },
+                {
+                    id: 'q-2',
+                    text: 'Which facilities did you use during your visit?',
+                    type: 'checkbox',
+                    required: true,
+                    options: ['Restrooms', 'Restaurant', 'Gift shop', 'Information desk', 'Rest areas', 'Parking']
+                },
+                {
+                    id: 'q-3',
+                    text: 'How would you rate the accessibility of our facilities?',
+                    type: 'rating',
+                    required: true
+                },
+                {
+                    id: 'q-4',
+                    text: 'Were the facilities adequately maintained?',
+                    type: 'multiple-choice',
+                    required: true,
+                    options: ['Yes, very well maintained', 'Mostly well maintained', 'Somewhat maintained', 'Poorly maintained', 'Not maintained at all']
+                },
+                {
+                    id: 'q-5',
+                    text: 'What improvements would you suggest for our facilities?',
+                    type: 'text',
+                    required: false
+                }
+            ];
+        }
+        
+        function getEventQuestions() {
+            return [
+                {
+                    id: 'q-1',
+                    text: 'Which event did you attend?',
+                    type: 'multiple-choice',
+                    required: true,
+                    options: ['Summer Festival', 'Cultural Night', 'Art Exhibition', 'Music Concert', 'Food Tasting']
+                },
+                {
+                    id: 'q-2',
+                    text: 'How would you rate the organization of the event?',
+                    type: 'rating',
+                    required: true
+                },
+                {
+                    id: 'q-3',
+                    text: 'What aspects of the event did you enjoy?',
+                    type: 'checkbox',
+                    required: false,
+                    options: ['Entertainment', 'Food & drinks', 'Venue', 'Staff service', 'Activities']
+                },
+                {
+                    id: 'q-4',
+                    text: 'How likely are you to attend future events?',
+                    type: 'rating',
+                    required: true
+                },
+                {
+                    id: 'q-5',
+                    text: 'How did you hear about this event?',
+                    type: 'multiple-choice',
+                    required: true,
+                    options: ['Website', 'Social media', 'Friend/Family', 'Email newsletter', 'Local advertising']
+                },
+                {
+                    id: 'q-6',
+                    text: 'Any suggestions for future events?',
+                    type: 'text',
+                    required: false
+                },
+                {
+                    id: 'q-7',
+                    text: 'How would you rate the value for money?',
+                    type: 'rating',
+                    required: true
+                },
+                {
+                    id: 'q-8',
+                    text: 'How would you rate your overall event experience?',
+                    type: 'rating',
+                    required: true
+                }
+            ];
+        }
+        
+        function getCustomerServiceQuestions() {
+            return [
+                {
+                    id: 'q-1',
+                    text: 'How would you rate our staff friendliness?',
+                    type: 'rating',
+                    required: true
+                },
+                {
+                    id: 'q-2',
+                    text: 'How would you rate our staff knowledge?',
+                    type: 'rating',
+                    required: true
+                },
+                {
+                    id: 'q-3',
+                    text: 'How quickly were your questions or concerns addressed?',
+                    type: 'multiple-choice',
+                    required: true,
+                    options: ['Immediately', 'Within a few minutes', 'After some delay', 'After a long wait', 'Not addressed']
+                },
+                {
+                    id: 'q-4',
+                    text: 'Which department did you interact with?',
+                    type: 'checkbox',
+                    required: true,
+                    options: ['Front desk', 'Tour guides', 'Gift shop', 'Restaurant', 'Security', 'Management']
+                },
+                {
+                    id: 'q-5',
+                    text: 'Did our staff exceed your expectations?',
+                    type: 'multiple-choice',
+                    required: true,
+                    options: ['Yes, definitely', 'Somewhat', 'Met expectations', 'Fell short', 'Definitely not']
+                },
+                {
+                    id: 'q-6',
+                    text: 'How can we improve our customer service?',
+                    type: 'text',
+                    required: false
+                },
+                {
+                    id: 'q-7',
+                    text: 'How would you rate your overall customer service experience?',
+                    type: 'rating',
+                    required: true
+                }
+            ];
+        }
+        
+        function getWebsiteQuestions() {
+            return [
+                {
+                    id: 'q-1',
+                    text: 'How easy was it to navigate our website?',
+                    type: 'rating',
+                    required: true
+                },
+                {
+                    id: 'q-2',
+                    text: 'What was the primary purpose of your visit to our website?',
+                    type: 'multiple-choice',
+                    required: true,
+                    options: ['Booking tickets', 'Finding information', 'Checking opening hours', 'Looking at events', 'Contacting us']
+                },
+                {
+                    id: 'q-3',
+                    text: 'Which device did you use to access our website?',
+                    type: 'multiple-choice',
+                    required: true,
+                    options: ['Desktop computer', 'Laptop', 'Tablet', 'Smartphone', 'Other']
+                },
+                {
+                    id: 'q-4',
+                    text: 'Which features would you like to see improved?',
+                    type: 'checkbox',
+                    required: false,
+                    options: ['Navigation', 'Booking system', 'Information content', 'Visual design', 'Mobile responsiveness']
+                },
+                {
+                    id: 'q-5',
+                    text: 'Did you find all the information you were looking for?',
+                    type: 'multiple-choice',
+                    required: true,
+                    options: ['Yes, easily', 'Yes, but it took time', 'Only partially', 'No, couldn\'t find it', 'Wasn\'t looking for specific info']
+                },
+                {
+                    id: 'q-6',
+                    text: 'How would you rate the website design?',
+                    type: 'rating',
+                    required: true
+                },
+                {
+                    id: 'q-7',
+                    text: 'Any suggestions to improve our website?',
+                    type: 'text',
+                    required: false
+                },
+                {
+                    id: 'q-8',
+                    text: 'How would you rate your overall website experience?',
+                    type: 'rating',
+                    required: true
+                }
+            ];
+        }
+        
+       
+        function getVisitorExperienceResponses() {
+                const responses = {};
+                
+           
+            const sentiments = ['positive', 'positive', 'positive', 'neutral', 'neutral', 'neutral', 'negative', 'negative'];
+            
+            for (let i = 0; i < 8; i++) {
+                const today = new Date();
+                const daysAgo = i * 2;
+                const responseDate = new Date(today);
+                responseDate.setDate(today.getDate() - daysAgo);
+                
+                responses[`response-${i}`] = {
+                    timestamp: responseDate.toISOString(),
+                    sentiment: sentiments[i]
+                };
+            }
+            
+            return responses;
+        }
+        
+        function getTourGuideResponses() {
+            const responses = {};
+            
+           
+            const sentiments = ['positive', 'positive', 'positive', 'positive', 'neutral', 'neutral', 'neutral', 'negative', 'negative'];
+            
+            for (let i = 0; i < 9; i++) {
+                const today = new Date();
+                const daysAgo = i * 1.5;
+                const responseDate = new Date(today);
+                responseDate.setDate(today.getDate() - daysAgo);
+                
+                responses[`response-${i}`] = {
+                    timestamp: responseDate.toISOString(),
+                    sentiment: sentiments[i]
+                };
+            }
+            
+            return responses;
+        }
+        
+        function getFacilityResponses() {
+            const responses = {};
+            
+           
+            const sentiments = ['positive', 'positive', 'neutral', 'neutral', 'negative', 'negative'];
+            
+            for (let i = 0; i < 6; i++) {
+                const today = new Date();
+                const daysAgo = i * 3;
+                const responseDate = new Date(today);
+                responseDate.setDate(today.getDate() - daysAgo);
+                
+                responses[`response-${i}`] = {
+                    timestamp: responseDate.toISOString(),
+                    sentiment: sentiments[i]
+                };
+            }
+            
+            return responses;
+        }
+        
+        function getEventResponses() {
+            const responses = {};
+            
+           
+            const sentiments = ['positive', 'positive', 'positive', 'neutral', 'neutral', 'negative', 'negative'];
+            
+            for (let i = 0; i < 7; i++) {
+                const today = new Date();
+                const daysAgo = i * 2.5;
+                const responseDate = new Date(today);
+                responseDate.setDate(today.getDate() - daysAgo);
+                
+                responses[`response-${i}`] = {
+                    timestamp: responseDate.toISOString(),
+                    sentiment: sentiments[i]
+                };
+            }
+            
+            return responses;
+        }
+        
+        function getCustomerServiceResponses() {
+            const responses = {};
+            
+           
+            const sentiments = ['positive', 'positive', 'positive', 'neutral', 'neutral', 'neutral', 'negative', 'negative'];
+            
+            for (let i = 0; i < 8; i++) {
+                const today = new Date();
+                const daysAgo = i * 4 + 30;
+                const responseDate = new Date(today);
+                responseDate.setDate(today.getDate() - daysAgo);
+                
+                responses[`response-${i}`] = {
+                    timestamp: responseDate.toISOString(),
+                    sentiment: sentiments[i]
+                };
+            }
+            
+            return responses;
+        }
+        
+        function getWebsiteResponses() {
+            const responses = {};
+            
+           
+            const sentiments = ['positive', 'positive', 'positive', 'positive', 'neutral', 'neutral', 'neutral', 'negative', 'negative'];
+            
+            for (let i = 0; i < 9; i++) {
+                const today = new Date();
+                const daysAgo = i * 5 + 60;
+                const responseDate = new Date(today);
+                responseDate.setDate(today.getDate() - daysAgo);
+                
+                responses[`response-${i}`] = {
+                    timestamp: responseDate.toISOString(),
+                    sentiment: sentiments[i]
+                };
+            }
+            
+            return responses;
+        }
+        
+       
+        function generateRandomAnswers(questions, responseIndex = 0) {
+            const answers = [];
+            
+           
+           
+            const sentiment = responseIndex < 3 ? 'positive' : (responseIndex < 6 ? 'neutral' : 'negative');
+            
+            questions.forEach(question => {
+                const questionLower = question.text.toLowerCase();
+                
+                switch (question.type) {
+                case 'rating':
+                       
+                        if (questionLower.includes('cleanliness')) {
+                            if (sentiment === 'positive') answers.push('5 out of 5');
+                            else if (sentiment === 'neutral') answers.push('3 out of 5');
+                            else answers.push('1 out of 5');
+                        } 
+                        else if (questionLower.includes('value for money')) {
+                            if (sentiment === 'positive') answers.push('5 out of 5');
+                            else if (sentiment === 'neutral') answers.push('3 out of 5');
+                            else answers.push('2 out of 5');
+                        } 
+                        else if (questionLower.includes('overall experience')) {
+                            if (sentiment === 'positive') answers.push('5 out of 5');
+                            else if (sentiment === 'neutral') answers.push('3 out of 5');
+                            else answers.push('2 out of 5');
+                        } 
+                        else if (questionLower.includes('staff') || questionLower.includes('guide')) {
+                            if (sentiment === 'positive') answers.push('5 out of 5');
+                            else if (sentiment === 'neutral') answers.push('4 out of 5');
+                            else answers.push('2 out of 5');
+                        } 
+                        else if (questionLower.includes('recommend')) {
+                            if (sentiment === 'positive') answers.push('5 out of 5');
+                            else if (sentiment === 'neutral') answers.push('3 out of 5');
+                            else answers.push('1 out of 5');
+                        } 
+                        else {
+                            if (sentiment === 'positive') answers.push('5 out of 5');
+                            else if (sentiment === 'neutral') answers.push('3 out of 5');
+                            else answers.push('2 out of 5');
+                        }
+                        break;
+                        
+                case 'multiple-choice':
+                        if (questionLower.includes('age group')) {
+                           
+                            if (sentiment === 'positive') answers.push('25-34');
+                            else if (sentiment === 'neutral') answers.push('35-44');
+                            else answers.push('45-54');
+                        } 
+                        else if (questionLower.includes('purpose')) {
+                            if (sentiment === 'positive') answers.push('Tourism');
+                            else if (sentiment === 'neutral') answers.push('Education');
+                            else answers.push('Business');
+                        } 
+                        else if (questionLower.includes('hear about')) {
+                            if (sentiment === 'positive') answers.push('Friend/Family');
+                            else if (sentiment === 'neutral') answers.push('Social media');
+                            else answers.push('Advertisement');
+                        } 
+                        else if (questionLower.includes('tour')) {
+                            if (sentiment === 'positive') answers.push('Historical Tour');
+                            else if (sentiment === 'neutral') answers.push('Cultural Experience');
+                            else answers.push('Evening Special');
+                        } 
+                        else if (questionLower.includes('recommend')) {
+                            if (sentiment === 'positive') answers.push('Definitely');
+                            else if (sentiment === 'neutral') answers.push('Probably');
+                            else answers.push('Not sure');
+                        } 
+                        else if (questionLower.includes('device')) {
+                            if (sentiment === 'positive') answers.push('Smartphone');
+                            else if (sentiment === 'neutral') answers.push('Laptop');
+                            else answers.push('Desktop computer');
+                        } 
+                        else if (questionLower.includes('event')) {
+                            if (sentiment === 'positive') answers.push('Summer Festival');
+                            else if (sentiment === 'neutral') answers.push('Cultural Night');
+                            else answers.push('Art Exhibition');
+                        } 
+                        else {
+                           
+                            if (sentiment === 'positive' && question.options.length > 0) {
+                                answers.push(question.options[0]);
+                            } else if (sentiment === 'neutral' && question.options.length > 1) {
+                                answers.push(question.options[1]);
+                            } else if (question.options.length > 2) {
+                                answers.push(question.options[2]);
+                            } else {
+                                answers.push(question.options[0]);
+                            }
+                        }
+                        break;
+                        
+                case 'checkbox':
+                        if (questionLower.includes('improve')) {
+                            if (sentiment === 'positive') {
+                                answers.push('Interactive exhibits');
+                            } else if (sentiment === 'neutral') {
+                                answers.push('Gift shop, Guided tour');
+                            } else {
+                                answers.push('Rest areas, Restaurant');
+                            }
+                        } 
+                        else if (questionLower.includes('facilities') || questionLower.includes('use')) {
+                            if (sentiment === 'positive') {
+                                answers.push('Information desk, Gift shop');
+                            } else if (sentiment === 'neutral') {
+                                answers.push('Restrooms, Parking');
+                            } else {
+                                answers.push('Restrooms, Restaurant, Rest areas');
+                            }
+                        } 
+                        else if (questionLower.includes('enjoy')) {
+                            if (sentiment === 'positive') {
+                                answers.push('Guide personality, Information provided, Tour route');
+                            } else if (sentiment === 'neutral') {
+                                answers.push('Information provided, Group size');
+                            } else {
+                                answers.push('Tour length');
+                            }
+                        } 
+                        else if (questionLower.includes('department')) {
+                            if (sentiment === 'positive') {
+                                answers.push('Tour guides, Gift shop');
+                            } else if (sentiment === 'neutral') {
+                                answers.push('Front desk, Restaurant');
+                            } else {
+                                answers.push('Front desk, Security, Management');
+                            }
+                        } 
+                        else if (questionLower.includes('features')) {
+                            if (sentiment === 'positive') {
+                                answers.push('Information content, Visual design');
+                            } else if (sentiment === 'neutral') {
+                                answers.push('Booking system, Mobile responsiveness');
+                            } else {
+                                answers.push('Navigation, Booking system, Information content');
+                            }
+                        } 
+                        else {
+                           
+                            if (sentiment === 'positive' && question.options.length >= 2) {
+                                answers.push(question.options.slice(0, 2).join(', '));
+                            } else if (sentiment === 'neutral' && question.options.length >= 2) {
+                                answers.push(question.options.slice(1, 3).join(', '));
+                            } else if (question.options.length >= 3) {
+                                answers.push(question.options.slice(2, 4).join(', '));
+                            } else {
+                                answers.push(question.options[0]);
+                            }
+                        }
+                        break;
+                        
+                    case 'text':
+                        if (questionLower.includes('enjoy')) {
+                            if (sentiment === 'positive') {
+                                answers.push('I really enjoyed the interactive exhibits. The staff was knowledgeable and friendly. The whole experience exceeded my expectations!');
+                            } else if (sentiment === 'neutral') {
+                                answers.push('The exhibits were interesting. Some areas were more engaging than others. The staff was helpful when asked questions.');
+                            } else {
+                                answers.push('I didn\'t enjoy much about my visit. The exhibits were underwhelming and the staff seemed disinterested in helping visitors.');
+                            }
+                        } 
+                        else if (questionLower.includes('improve')) {
+                            if (sentiment === 'positive') {
+                                answers.push('Everything was great! Perhaps adding more interactive elements would make it even better, but I was very satisfied overall.');
+                            } else if (sentiment === 'neutral') {
+                                answers.push('The waiting times could be improved, especially during peak hours. Perhaps a timed entry system would help.');
+                            } else {
+                                answers.push('The facilities need significant improvement. Cleanliness was a major issue, and the staff seemed poorly trained. Wait times were excessive.');
+                            }
+                        } 
+                        else if (questionLower.includes('suggestion')) {
+                            if (sentiment === 'positive') {
+                                answers.push('Keep up the great work! Maybe consider extending opening hours during peak season.');
+                            } else if (sentiment === 'neutral') {
+                                answers.push('More seating areas would be helpful, especially for families with children or elderly visitors.');
+                            } else {
+                                answers.push('Complete staff retraining is needed. Also, the facilities need renovation and better maintenance procedures.');
+                            }
+                        } 
+                        else if (questionLower.includes('website')) {
+                            if (sentiment === 'positive') {
+                                answers.push('The website was easy to navigate and I found all the information I needed quickly. The booking process was smooth.');
+                            } else if (sentiment === 'neutral') {
+                                answers.push('The website has most information needed, but the booking system could be more user-friendly. It took several attempts to complete my reservation.');
+                            } else {
+                                answers.push('The website is confusing and outdated. I had to call customer service because I couldn\'t complete my booking online after multiple attempts.');
+                            }
+                        } 
+                        else {
+                           
+                            if (sentiment === 'positive') {
+                                answers.push('Overall, it was an excellent experience that I would highly recommend to others. The staff was exceptional and the facilities were immaculate.');
+                            } else if (sentiment === 'neutral') {
+                                answers.push('It was an average experience. Some aspects were good while others could use improvement. It met my basic expectations.');
+                            } else {
+                                answers.push('I was disappointed with my experience. There were multiple issues that detracted from what could have been an enjoyable visit.');
+                            }
+                        }
+                        break;
+                        
+                default:
+                        answers.push('No answer provided');
+                }
+            });
+            
+            return answers;
+        }
+        
+       
+        function generateAIInsights(form) {
+            painPointsList.innerHTML = '';
+            
+           
+            let painPoints = [];
+            
+            if (form.title.includes('Visitor Experience')) {
+                painPoints = [
+    {
+        title: 'Clean and Well-Maintained Areas',
+        description: 'Several visitors praised the overall cleanliness, particularly in dining and exhibit areas. Maintaining this standard will reinforce a positive impression.'
+    },
+    {
+        title: 'Restroom Cleanliness Concerns',
+        description: 'While some areas were well-maintained, restrooms received mixed feedback (average 3.2/5). Increasing cleaning frequency could further improve satisfaction.'
+    },
+    {
+        title: 'Good Value for Money Perception',
+        description: 'Visitors rated value for money at 3.2/5, with many appreciating the pricing. Adding more interactive exhibits or bundled offers could enhance this further.'
+    },
+    {
+        title: 'Rest Area Comfort',
+        description: '68% of respondents wanted more rest areas. Adding more seating, shaded spots, and refreshment stations would enhance the visitor experience.'
+    }
+];
+} else if (form.title.includes('Tour Guide')) {
+    painPoints = [
+        {
+            title: 'Engaging and Informative Tours',
+            description: 'Many visitors enjoyed the detailed information provided by guides. Continuing to focus on storytelling and knowledge will sustain this strength.'
+        },
+        {
+            title: 'Tour Pacing Adjustments',
+            description: 'While some visitors enjoyed the tour speed, others felt rushed. Allowing more time at key exhibits could improve satisfaction for all.'
+        },
+        {
+            title: 'Guide Clarity and Volume',
+            description: 'Several visitors reported difficulty hearing guides in crowded areas. Providing audio equipment for large groups could address this issue.'
+        },
+        {
+            title: 'Personalized Experience Requests',
+            description: 'A portion of visitors expressed interest in more customized tour options. Offering themed or specialized tours could increase engagement.'
+        }
+    ];
+} else if (form.title.includes('Facility')) {
+    painPoints = [
+        {
+            title: 'Well-Maintained Common Areas',
+            description: 'Visitors appreciated the upkeep of main areas, but some highlighted specific spots needing improvement. Regular audits could ensure consistency.'
+        },
+        {
+            title: 'Restroom Cleanliness & Maintenance',
+            description: 'Restroom maintenance received mixed ratings (2.8/5). Increasing cleaning checks and maintenance could address concerns.'
+        },
+        {
+            title: 'Improved Accessibility for All',
+            description: 'Many areas were easily accessible, but visitors with mobility challenges suggested enhancements. An accessibility review could optimize inclusivity.'
+        },
+        {
+            title: 'Restaurant Wait Times',
+            description: 'While food quality was appreciated, long wait times during peak hours were a concern. Expanding seating or introducing a reservation system could help.'
+        }
+    ];
+} else if (form.title.includes('Event')) {
+    painPoints = [
+        {
+            title: 'Lively Atmosphere & Entertainment',
+            description: 'Many visitors praised the vibrant atmosphere and entertainment options. Maintaining this variety will keep events engaging.'
+        },
+        {
+            title: 'Food & Beverage Expansion',
+            description: '57% of visitors requested more diverse food options. Expanding the menu with dietary-friendly choices would cater to a broader audience.'
+        },
+        {
+            title: 'Navigation & Signage Enhancements',
+            description: 'While many enjoyed the event layout, some struggled with navigation. Clearer signage and digital maps could improve wayfinding.'
+        },
+        {
+            title: 'Queue Management at Activities',
+            description: 'Popular attractions experienced long queues, causing some frustration. Implementing time-slot bookings could smooth out traffic flow.'
+        }
+    ];
+} else if (form.title.includes('Customer Service')) {
+    painPoints = [
+        {
+            title: 'Friendly and Welcoming Staff',
+            description: 'Staff friendliness was rated highly (4.2/5), with many visitors praising their hospitality. Continuing to emphasize customer service will maintain this standard.'
+        },
+        {
+            title: 'Knowledge Gaps in Information',
+            description: 'Although friendliness was a strong point, knowledge scores were lower (3.4/5). More staff training on policies and exhibits could enhance service.'
+        },
+        {
+            title: 'Efficient Response Times',
+            description: 'Many visitors received quick assistance, but 32% reported delays. Optimizing staff deployment during peak hours could improve response efficiency.'
+        },
+        {
+            title: 'Consistent Service Quality Across Departments',
+            description: 'Visitors noted varying service levels between departments. Standardized training and service protocols could create a more uniform experience.'
+        }
+    ];
+} else if (form.title.includes('Website')) {
+    painPoints = [
+        {
+            title: 'Smooth Desktop Experience',
+            description: 'Desktop users reported an overall smooth browsing experience. Keeping this optimization intact while improving mobile usability would benefit all users.'
+        },
+        {
+            title: 'Mobile Booking Challenges',
+            description: '76% of mobile users faced booking difficulties. Enhancing mobile responsiveness and simplifying the process could boost conversion rates.'
+        },
+        {
+            title: 'Navigation & Information Access',
+            description: '42% of visitors found it difficult to locate key information. Improving menu structure and search functionality would enhance usability.'
+        },
+        {
+            title: 'Page Load Speed Concerns',
+            description: 'Slow loading times, especially for image-heavy pages, were reported. Optimizing media and backend performance could reduce bounce rates.'
+        }
+    ];
+} else {
+    painPoints = [
+        {
+            title: 'Smooth Visitor Flow Management',
+            description: 'Visitors appreciated organized crowd management. Exploring timed entry systems could further enhance efficiency during peak times.'
+        },
+        {
+            title: 'Wait Time Concerns',
+            description: 'Some visitors mentioned long queues during peak hours. Increasing staff presence or streamlining processes could reduce delays.'
+        },
+        {
+            title: 'Consistent Communication Across Staff',
+            description: 'While many had seamless interactions, some visitors reported inconsistent information. Standardized training can ensure accuracy across teams.'
+        },
+        {
+            title: 'Clearer Signage for First-Time Visitors',
+            description: 'Repeat visitors found navigation easier, but first-time guests suggested better signage. Adding directional markers and digital kiosks could help.'
+        }
+    ];
+}
+         
+           
+            painPoints.forEach(painPoint => {
+                const painPointItem = document.createElement('div');
+                painPointItem.className = 'pain-point-item';
+                
+                painPointItem.innerHTML = `
+                    <div class="pain-point-title">${painPoint.title}</div>
+                    <div class="pain-point-description">${painPoint.description}</div>
+                `;
+                
+                painPointsList.appendChild(painPointItem);
+            });
+        }
+        
+       
+        function editForm(id) {
+           
+            if (id.startsWith('pseudo-')) {
+                showToast('Cannot edit demo forms. Create a new form instead.');
+                return;
+            }
+            
+            showLoading();
+            
+            const formRef = database.ref(`users/${currentUserEmail}/feedback-forms/${id}`);
+            
+            formRef.once('value', (snapshot) => {
+                if (snapshot.exists()) {
+                    const form = snapshot.val();
+                    currentFormId = id;
+                    
+                   
+                    formTitle.value = form.title;
+                    formDescription.value = form.description || '';
+                    
+                   
+                    formQuestions.innerHTML = '';
+                    
+                   
+                    if (form.questions && form.questions.length > 0) {
+                        form.questions.forEach(question => {
+                            addQuestionToBuilder(question);
+                        });
+                    }
+                    
+                   
+                    updateFormPreview();
+                    
+                   
+                    document.getElementById('formBuilderTitle').textContent = 'Edit Feedback Form';
+                    
+                   
+                    formBuilderModal.classList.add('active');
+                    
+                   
+                    switchTab('builder');
+                    
+                    hideLoading();
+                } else {
+                    hideLoading();
+                    showToast('Form not found');
+                }
+            }, (error) => {
+                console.error("Error fetching form:", error);
+                hideLoading();
+                showToast('Error fetching form');
+            });
+        }
+        
+       
+        function deleteForm(id) {
+           
+            if (id.startsWith('pseudo-')) {
+                showToast('Cannot delete demo forms. Create a new form instead.');
+                return;
+            }
+            
+            if (confirm('Are you sure you want to delete this form? All responses will be lost.')) {
+                showLoading();
+                
+                const formRef = database.ref(`users/${currentUserEmail}/feedback-forms/${id}`);
+                
+                formRef.remove()
+                    .then(() => {
+                        hideLoading();
+                        showToast('Form deleted successfully');
+                    })
+                    .catch((error) => {
+                        console.error("Error deleting form:", error);
+                        hideLoading();
+                        showToast('Error deleting form');
+                    });
+            }
+        }
+        
+       
+        function analyzeForm(id) {
+            showLoading();
+            
+            let form;
+            
+            if (id.startsWith('pseudo-')) {
+               
+                form = allForms.find(f => f.id === id);
+                setupAnalysisModal(form);
+                hideLoading();
+            } else {
+               
+                const formRef = database.ref(`users/${currentUserEmail}/feedback-forms/${id}`);
+                
+                formRef.once('value', (snapshot) => {
+                    if (snapshot.exists()) {
+                        form = snapshot.val();
+                        form.id = id;
+                        setupAnalysisModal(form);
+                    } else {
+                        hideLoading();
+                        showToast('Form not found');
+                    }
+                }, (error) => {
+                    console.error("Error fetching form:", error);
+                    hideLoading();
+                    showToast('Error fetching form');
+                });
+            }
+        }
+        
+       
+        function setupAnalysisModal(form) {
+            currentFormId = form.id;
+            
+           
+            analysisTitle.textContent = `Feedback Analysis: ${form.title}`;
+            analysisFormTitle.textContent = form.title;
+            analysisFormDescription.textContent = form.description || 'No description provided';
+            
+           
+            const responseCount = form.responses ? Object.keys(form.responses).length : 0;
+            totalResponses.textContent = responseCount;
+            
+           
+            initializeAnalysisCharts(form);
+            
+           
+            loadFormResponses(form);
+            
+           
+            generateAIInsights(form);
+            
+           
+            formAnalysisModal.classList.add('active');
+            
+           
+            document.querySelectorAll('#formAnalysisModal .tab').forEach(tab => {
+                tab.classList.remove('active');
+            });
+            document.querySelectorAll('#formAnalysisModal .tab-content').forEach(content => {
+                content.classList.remove('active');
+            });
+            document.querySelector('#formAnalysisModal .tab[data-tab="overview"]').classList.add('active');
+            document.getElementById('overviewTab').classList.add('active');
+            
+            hideLoading();
+            
+           
+            const isPseudoForm = form.id.startsWith('pseudo-');
+            const generateInsightsContainer = document.getElementById('generateInsightsContainer');
+            const generateAiInsightsBtn = document.getElementById('generateAiInsightsBtn');
+            const insightsStatus = document.getElementById('insightsStatus');
+            
+            if (isPseudoForm) {
+               
+                generateInsightsContainer.style.display = 'none';
+                
+               
+                generateAIInsights(form);
+            } else {
+               
+                generateInsightsContainer.style.display = 'block';
+                
+               
+                const responseCount = form.responses ? Object.keys(form.responses).length : 0;
+                
+                if (responseCount < 3) {
+                   
+                    generateAiInsightsBtn.disabled = true;
+                    insightsStatus.textContent = `At least 3 responses are required to generate AI insights. Currently have ${responseCount}/3.`;
+                    
+                   
+                    painPointsList.innerHTML = '<div style="text-align: center; padding: 20px; color: var(--dark-gray);">Generate AI insights when you have at least 3 responses.</div>';
+                } else {
+                   
+                    generateAiInsightsBtn.disabled = false;
+                    insightsStatus.textContent = '';
+                    
+                   
+                    generateAiInsightsBtn.onclick = async function() {
+                       
+                        generateAiInsightsBtn.disabled = true;
+                        generateAiInsightsBtn.innerHTML = '<i class="fas fa-spinner fa-spin" style="margin-right: 8px;"></i> Generating...';
+                        insightsStatus.textContent = 'Analyzing feedback data...';
+                        
+                        try {
+                           
+                            const insights = await window.generateRealAIInsights(form, form.responses);
+                            
+                            if (insights && insights.length > 0) {
+                               
+                                displayRealAIInsights(insights);
+                                insightsStatus.style.color = 'var(--success-color)';
+                                insightsStatus.textContent = 'AI insights generated successfully!';
+                            } else {
+                               
+                                insightsStatus.style.color = 'var(--failure-color)';
+                                insightsStatus.textContent = 'Failed to generate insights. Please try again.';
+                                painPointsList.innerHTML = '<div style="text-align: center; padding: 20px; color: var(--dark-gray);">Unable to generate insights. Try again later.</div>';
+                            }
+                        } catch (error) {
+                            console.error("Error generating AI insights:", error);
+                            insightsStatus.textContent = 'Error: ' + error.message;
+                        } finally {
+                           
+                            generateAiInsightsBtn.disabled = false;
+                            generateAiInsightsBtn.innerHTML = '<i class="fas fa-wand-magic-sparkles" style="margin-right: 8px;"></i> Generate AI Insights';
+                        }
+                    };
+                    
+                   
+                    painPointsList.innerHTML = '<div style="text-align: center; padding: 20px; color: var(--dark-gray);">Click "Generate AI Insights" to analyze your feedback data.</div>';
+                }
+            }
+        }
+        
+       
+        function initializeAnalysisCharts(form) {
+           
+            if (sentimentChart) sentimentChart.destroy();
+            if (ratingChart) ratingChart.destroy();
+            if (topicsChart) topicsChart.destroy();
+            
+           
+            let positive = 0, neutral = 0, negative = 0;
+            
+            if (form.responses) {
+                Object.values(form.responses).forEach(response => {
+                    if (response.sentiment === 'positive') positive++;
+                    else if (response.sentiment === 'neutral') neutral++;
+                    else if (response.sentiment === 'negative') negative++;
+                });
+            }
+            
+           
+            const sentimentCtx = document.getElementById('sentimentChart').getContext('2d');
+            sentimentChart = new Chart(sentimentCtx, {
+                type: 'doughnut',
+                data: {
+                    labels: ['Positive', 'Neutral', 'Negative'],
+                    datasets: [{
+                        data: [positive, neutral, negative],
+                        backgroundColor: ['#2ecc71', '#3498db', '#e74c3c'],
+                        borderWidth: 0
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: {
+                            position: 'bottom'
+                        }
+                    }
+                }
+            });
+            
+           
+            const ratingCtx = document.getElementById('ratingChart').getContext('2d');
+            ratingChart = new Chart(ratingCtx, {
+                type: 'bar',
+                data: {
+                    labels: ['1', '2', '3', '4', '5'],
+                    datasets: [{
+                        label: 'Rating Distribution',
+                        data: [
+                            Math.floor(Math.random() * 10),
+                            Math.floor(Math.random() * 15),
+                            Math.floor(Math.random() * 25),
+                            Math.floor(Math.random() * 35),
+                            Math.floor(Math.random() * 45)
+                        ],
+                        backgroundColor: 'rgba(255, 107, 157, 0.6)',
+                        borderColor: 'rgba(255, 107, 157, 1)',
+                        borderWidth: 1
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    scales: {
+                        y: {
+                            beginAtZero: true,
+                            title: {
+                                display: true,
+                                text: 'Number of Responses'
+                            }
+                        },
+                        x: {
+                            title: {
+                                display: true,
+                                text: 'Rating'
+                            }
+                        }
+                    }
+                }
+            });
+            
+           
+            const topicsCtx = document.getElementById('topicsChart').getContext('2d');
+            topicsChart = new Chart(topicsCtx, {
+                type: 'bar',
+                data: {
+                    labels: ['Staff', 'Cleanliness', 'Value', 'Location', 'Facilities', 'Experience'],
+                    datasets: [{
+                        label: 'Mentioned in Responses',
+                        data: [
+                            Math.floor(Math.random() * 100),
+                            Math.floor(Math.random() * 100),
+                            Math.floor(Math.random() * 100),
+                            Math.floor(Math.random() * 100),
+                            Math.floor(Math.random() * 100),
+                            Math.floor(Math.random() * 100)
+                        ],
+                        backgroundColor: 'rgba(255, 107, 157, 0.6)',
+                        borderColor: 'rgba(255, 107, 157, 1)',
+                        borderWidth: 1
+                    }]
+                },
+                options: {
+                    indexAxis: 'y',
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    scales: {
+                        x: {
+                            beginAtZero: true,
+                            title: {
+                                display: true,
+                                text: 'Frequency'
+                            }
+                        }
+                    }
+                }
+            });
+        }
+        
+       
+        function loadFormResponses(form) {
+            responsesList.innerHTML = '';
+            
+            if (!form.responses || Object.keys(form.responses).length === 0) {
+                responsesList.innerHTML = '<div style="text-align: center; padding: 20px; color: var(--dark-gray);">No responses yet.</div>';
+                return;
+            }
+            
+            const selectedSentiment = responseSentimentFilter.value;
+            let responses = Object.entries(form.responses).map(([id, response], index) => ({
+                id,
+                index,
+                ...response
+            }));
+            
+           
+            if (selectedSentiment !== 'all') {
+                responses = responses.filter(response => response.sentiment === selectedSentiment);
+            }
+            
+           
+            responses.sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp));
+            
+            if (responses.length === 0) {
+                responsesList.innerHTML = '<div style="text-align: center; padding: 20px; color: var(--dark-gray);">No responses match the selected filter.</div>';
+                return;
+            }
+            
+           
+            responses.forEach((response, index) => {
+                const responseDate = new Date(response.timestamp);
+                const formattedDate = responseDate.toLocaleDateString('en-US', { 
+                    year: 'numeric', 
+                    month: 'long', 
+                    day: 'numeric',
+                    hour: '2-digit',
+                    minute: '2-digit'
+                });
+                
+                const responseItem = document.createElement('div');
+                responseItem.className = 'response-item';
+                
+               
+                let sentimentClass = '';
+                let sentimentText = '';
+                
+                if (response.sentiment === 'positive') {
+                    sentimentClass = 'sentiment-positive';
+                    sentimentText = 'Positive';
+                } else if (response.sentiment === 'neutral') {
+                    sentimentClass = 'sentiment-neutral';
+                    sentimentText = 'Neutral';
+                } else if (response.sentiment === 'negative') {
+                    sentimentClass = 'sentiment-negative';
+                    sentimentText = 'Negative';
+                }
+                
+               
+                const responseHeader = `
+                    <div class="response-header">
+                        <div class="response-date">${formattedDate}</div>
+                        <div class="response-sentiment ${sentimentClass}">${sentimentText}</div>
+                    </div>
+                `;
+                
+               
+                let answersHTML = '';
+                
+               
+                if (form.id.startsWith('pseudo-')) {
+                   
+                    const answers = generateRandomAnswers(form.questions || [], response.index);
+                    
+                   
+                    if (form.questions && form.questions.length > 0) {
+                        form.questions.forEach((question, idx) => {
+                            answersHTML += `
+                                <div class="response-content">
+                                    <div class="response-question">${question.text}</div>
+                                    <div class="response-answer">${answers[idx]}</div>
+                                </div>
+                            `;
+                        });
+                    }
+                } else {
+                   
+                    if (form.questions && form.questions.length > 0 && response.responses) {
+                        form.questions.forEach((question) => {
+                           
+                            const questionId = question.id;
+                            const answer = response.responses[questionId] || 'No response';
+                            
+                           
+                            let formattedAnswer = '';
+                            
+                            switch (question.type) {
+                                case 'rating':
+                                    formattedAnswer = `${answer} out of 5`;
+                                    break;
+                                case 'multiple-choice':
+                                case 'checkbox':
+                                case 'text':
+                                    formattedAnswer = answer;
+                                    break;
+                                default:
+                                    formattedAnswer = 'No response';
+                            }
+                            
+                            answersHTML += `
+                                <div class="response-content">
+                                    <div class="response-question">${question.text}</div>
+                                    <div class="response-answer">${formattedAnswer}</div>
+                                </div>
+                            `;
+                        });
+                    }
+                }
+                
+               
+                responseItem.innerHTML = responseHeader + answersHTML;
+                responsesList.appendChild(responseItem);
+            });
+        }
+        
+       
+        function shareForm(id) {
+            currentFormId = id;
+            
+           
+            const baseUrl = window.location.origin;
+            const formUrl = `${baseUrl}/form-data-collection.html?form-id=${id}`;
+            
+            formLink.value = formUrl;
+            
+           
+            embedCode.value = `<iframe src="${formUrl}" width="100%" height="600" frameborder="0"></iframe>`;
+            
+           
+            qrCodeImage.crossOrigin = "anonymous";
+            qrCodeImage.src = `https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=${encodeURIComponent(formUrl)}`;
+            
+           
+            shareFormModal.classList.add('active');
+        }
+        
+       
+        createFormBtn.addEventListener('click', () => {
+           
+            currentFormId = null;
+            formTitle.value = '';
+            formDescription.value = '';
+            formQuestions.innerHTML = '';
+            
+           
+            addQuestionToBuilder();
+            
+           
+            updateFormPreview();
+            
+           
+            document.getElementById('formBuilderTitle').textContent = 'Create Feedback Form';
+            
+           
+            formBuilderModal.classList.add('active');
+            
+           
+            switchTab('builder');
+        });
+        
+       
+        function addQuestionToBuilder(questionData = null) {
+            const questionId = questionData ? questionData.id : `question-${Date.now()}`;
+            const questionText = questionData ? questionData.text : '';
+            const questionType = questionData ? questionData.type : 'multiple-choice';
+            const isRequired = questionData ? questionData.required : true;
+            
+            const questionItem = document.createElement('div');
+            questionItem.className = 'question-item';
+            questionItem.dataset.id = questionId;
+            
+            questionItem.innerHTML = `
+                <div class="question-header">
+                    <select class="question-type-select">
+                        <option value="multiple-choice" ${questionType === 'multiple-choice' ? 'selected' : ''}>Multiple Choice</option>
+                        <option value="checkbox" ${questionType === 'checkbox' ? 'selected' : ''}>Checkbox</option>
+                        <option value="rating" ${questionType === 'rating' ? 'selected' : ''}>Rating</option>
+                        <option value="text" ${questionType === 'text' ? 'selected' : ''}>Text</option>
+                    </select>
+                    <div class="question-actions">
+                        <button class="question-action-btn required-toggle" title="${isRequired ? 'Required' : 'Optional'}">
+                            <i class="fas ${isRequired ? 'fa-asterisk' : 'fa-asterisk'}" style="color: ${isRequired ? 'var(--primary)' : '#ccc'};"></i>
+                        </button>
+                        <button class="question-action-btn duplicate-question" style="color: var(--primary);" title="Duplicate">
+                            <i class="fas fa-copy"></i>
+                        </button>
+                        <button class="question-action-btn remove-question" style="color: var(--primary);" title="Remove">
+                            <i class="fas fa-trash"></i>
+                        </button>
+                    </div>
+                </div>
+                <input type="text" class="question-text" placeholder="Enter your question" value="${questionText}">
+                <div class="question-options-container" ${questionType === 'text' || questionType === 'rating' ? 'style="display: none;"' : ''}>
+                    <div class="question-options"></div>
+                    <button class="add-option-btn">
+                        <i class="fas fa-plus" style="margin-right: 5px;"></i> Add Option
+                    </button>
+                </div>
+            `;
+            
+            formQuestions.appendChild(questionItem);
+            
+           
+            const optionsContainer = questionItem.querySelector('.question-options');
+            if ((questionType === 'multiple-choice' || questionType === 'checkbox') && questionData && questionData.options) {
+                questionData.options.forEach(option => {
+                    addOptionToQuestion(optionsContainer, option);
+                });
+            } else if (questionType === 'multiple-choice' || questionType === 'checkbox') {
+               
+                addOptionToQuestion(optionsContainer, 'Option 1');
+                addOptionToQuestion(optionsContainer, 'Option 2');
+            }
+            
+           
+            const typeSelect = questionItem.querySelector('.question-type-select');
+            typeSelect.addEventListener('change', function() {
+                const newType = this.value;
+                const optionsContainer = questionItem.querySelector('.question-options-container');
+                
+                if (newType === 'text' || newType === 'rating') {
+                    optionsContainer.style.display = 'none';
+                } else {
+                    optionsContainer.style.display = 'block';
+                    
+                   
+                    const options = questionItem.querySelectorAll('.option-item');
+                    if (options.length === 0) {
+                        const optionsContainer = questionItem.querySelector('.question-options');
+                        addOptionToQuestion(optionsContainer, 'Option 1');
+                        addOptionToQuestion(optionsContainer, 'Option 2');
+                    }
+                }
+                
+               
+                updateFormPreview();
+            });
+            
+            const questionTextInput = questionItem.querySelector('.question-text');
+            questionTextInput.addEventListener('input', updateFormPreview);
+            
+            const requiredToggle = questionItem.querySelector('.required-toggle');
+            requiredToggle.addEventListener('click', function() {
+                const icon = this.querySelector('i');
+                const isCurrentlyRequired = icon.style.color === 'var(--primary)';
+                
+                if (isCurrentlyRequired) {
+                    icon.style.color = '#ccc';
+                    this.title = 'Optional';
+                } else {
+                    icon.style.color = 'var(--primary)';
+                    this.title = 'Required';
+                }
+                
+               
+                updateFormPreview();
+            });
+            
+            const duplicateBtn = questionItem.querySelector('.duplicate-question');
+            duplicateBtn.addEventListener('click', function() {
+                const questionData = getQuestionData(questionItem);
+                addQuestionToBuilder(questionData);
+                
+               
+                updateFormPreview();
+            });
+            
+            const removeBtn = questionItem.querySelector('.remove-question');
+            removeBtn.addEventListener('click', function() {
+                if (formQuestions.children.length > 1) {
+                    questionItem.remove();
+                    
+                   
+                    updateFormPreview();
+                } else {
+                    showToast('You must have at least one question');
+                }
+            });
+            
+            const addOptionBtn = questionItem.querySelector('.add-option-btn');
+            addOptionBtn.addEventListener('click', function() {
+                const optionsContainer = questionItem.querySelector('.question-options');
+                addOptionToQuestion(optionsContainer);
+                
+               
+                updateFormPreview();
+            });
+        }
+        
+       
+        function addOptionToQuestion(container, optionText = '') {
+            const optionItem = document.createElement('div');
+            optionItem.className = 'option-item';
+            
+            optionItem.innerHTML = `
+                <input type="text" class="option-text" placeholder="Enter option" value="${optionText}">
+                <button class="remove-option-btn">
+                    <i class="fas fa-times"></i>
+                </button>
+            `;
+            
+            container.appendChild(optionItem);
+            
+           
+            const optionInput = optionItem.querySelector('.option-text');
+            optionInput.addEventListener('input', updateFormPreview);
+            
+            const removeBtn = optionItem.querySelector('.remove-option-btn');
+            removeBtn.addEventListener('click', function() {
+                if (container.children.length > 1) {
+                    optionItem.remove();
+                    
+                   
+                    updateFormPreview();
+                } else {
+                    showToast('You must have at least one option');
+                }
+            });
+        }
+        
+       
+        function getQuestionData(questionItem) {
+            const id = questionItem.dataset.id;
+            const text = questionItem.querySelector('.question-text').value;
+            const type = questionItem.querySelector('.question-type-select').value;
+            const required = questionItem.querySelector('.required-toggle i').style.color === 'var(--primary)';
+            
+            const questionData = {
+                id,
+                text,
+                type,
+                required
+            };
+            
+            if (type === 'multiple-choice' || type === 'checkbox') {
+                const options = [];
+                questionItem.querySelectorAll('.option-text').forEach(option => {
+                    options.push(option.value);
+                });
+                questionData.options = options;
+            }
+            
+            return questionData;
+        }
+        
+       
+        function updateFormPreview() {
+           
+            previewTitle.textContent = formTitle.value || 'Form Title';
+            previewDescription.textContent = formDescription.value || 'Form Description';
+            
+           
+            previewQuestions.innerHTML = '';
+            
+           
+            document.querySelectorAll('.question-item').forEach((questionItem, index) => {
+                const questionData = getQuestionData(questionItem);
+                
+                const previewQuestion = document.createElement('div');
+                previewQuestion.className = 'preview-question';
+                
+                let questionHTML = `
+                    <div class="preview-question-text">
+                        ${index + 1}. ${questionData.text || 'Question'} ${questionData.required ? '<span style="color: var(--primary);">*</span>' : ''}
+                    </div>
+                `;
+                
+                switch (questionData.type) {
+                    case 'multiple-choice':
+                        questionHTML += '<div class="preview-options">';
+                        if (questionData.options && questionData.options.length > 0) {
+                            questionData.options.forEach((option, i) => {
+                                questionHTML += `
+                                    <div class="preview-option">
+                                        <input type="radio" id="q${index}-o${i}" name="q${index}">
+                                        <label for="q${index}-o${i}">${option}</label>
+                                    </div>
+                                `;
+                            });
+                        }
+                        questionHTML += '</div>';
+                        break;
+                    case 'checkbox':
+                        questionHTML += '<div class="preview-options">';
+                        if (questionData.options && questionData.options.length > 0) {
+                            questionData.options.forEach((option, i) => {
+                                questionHTML += `
+                                    <div class="preview-option">
+                                        <input type="checkbox" id="q${index}-o${i}" name="q${index}">
+                                        <label for="q${index}-o${i}">${option}</label>
+                                    </div>
+                                `;
+                            });
+                        }
+                        questionHTML += '</div>';
+                        break;
+                    case 'rating':
+                        questionHTML += `
+                            <div class="preview-rating">
+                                <div class="rating-option" data-value="1">1</div>
+                                <div class="rating-option" data-value="2">2</div>
+                                <div class="rating-option" data-value="3">3</div>
+                                <div class="rating-option" data-value="4">4</div>
+                                <div class="rating-option" data-value="5">5</div>
+                            </div>
+                        `;
+                        break;
+                    case 'text':
+                        questionHTML += '<textarea class="preview-textarea" placeholder="Your answer"></textarea>';
+                        break;
+                }
+                
+                previewQuestion.innerHTML = questionHTML;
+                previewQuestions.appendChild(previewQuestion);
+            });
+            
+           
+            document.querySelectorAll('.rating-option').forEach(option => {
+                option.addEventListener('click', function() {
+                   
+                    const siblings = this.parentElement.querySelectorAll('.rating-option');
+                    siblings.forEach(sib => sib.classList.remove('selected'));
+                    
+                   
+                    this.classList.add('selected');
+                });
+            });
+        }
+        
+       
+        addQuestionBtn.addEventListener('click', () => {
+            addQuestionToBuilder();
+            updateFormPreview();
+        });
+        
+       
+        saveAsDraftBtn.addEventListener('click', () => {
+            saveForm('draft');
+        });
+        
+       
+        publishFormBtn.addEventListener('click', () => {
+            saveForm('active');
+        });
+
+        archiveFormBtn.addEventListener('click', () => {
+            saveForm('archived');
+        });
+        
+       
+        function saveForm(status) {
+           
+            if (!formTitle.value.trim()) {
+                showToast('Please enter a form title');
+                return;
+            }
+            
+           
+            const questions = [];
+            document.querySelectorAll('.question-item').forEach(questionItem => {
+                const questionData = getQuestionData(questionItem);
+                
+               
+                if (!questionData.text.trim()) {
+                    showToast('Please enter text for all questions');
+                    return;
+                }
+                
+               
+                if ((questionData.type === 'multiple-choice' || questionData.type === 'checkbox') && 
+                    (!questionData.options || questionData.options.some(opt => !opt.trim()))) {
+                    showToast('Please enter text for all options');
+                    return;
+                }
+                
+                questions.push(questionData);
+            });
+            
+            if (questions.length === 0) {
+                showToast('Please add at least one question');
+                return;
+            }
+            
+            showLoading();
+            
+            const formData = {
+                title: formTitle.value.trim(),
+                description: formDescription.value.trim(),
+                questions: questions,
+                status: status,
+                updatedAt: new Date().toISOString()
+            };
+            
+            let savePromise;
+            
+            if (currentFormId && !currentFormId.startsWith('pseudo-')) {
+               
+                const formRef = database.ref(`users/${currentUserEmail}/feedback-forms/${currentFormId}`);
+                savePromise = formRef.update(formData);
+            } else {
+               
+                formData.createdAt = new Date().toISOString();
+                const formsRef = database.ref(`users/${currentUserEmail}/feedback-forms`);
+                savePromise = formsRef.push(formData);
+            }
+            
+            savePromise
+                .then(() => {
+                    hideLoading();
+                    formBuilderModal.classList.remove('active');
+                    showToast(status === 'draft' ? 'Form saved as draft' : 'Form published successfully');
+                })
+                .catch((error) => {
+                    console.error("Error saving form:", error);
+                    hideLoading();
+                    showToast('Error saving form');
+                });
+        }
+        
+       
+        copyLinkBtn.addEventListener('click', () => {
+            formLink.select();
+            document.execCommand('copy');
+            showToast('Link copied to clipboard');
+        });
+        
+       
+        downloadQrBtn.addEventListener('click', () => {
+           
+            const canvas = document.createElement('canvas');
+            const ctx = canvas.getContext('2d');
+            
+           
+            canvas.width = 200;
+            canvas.height = 200;
+            
+           
+            const img = new Image();
+            
+           
+            img.crossOrigin = "anonymous";
+            
+           
+            img.onload = function() {
+               
+                ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+                
+                try {
+                   
+                    canvas.toBlob(function(blob) {
+                       
+                        const url = window.URL.createObjectURL(blob);
+            const link = document.createElement('a');
+                        link.href = url;
+            link.download = `form-qr-${currentFormId}.png`;
+                        
+                       
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+                        
+                       
+                        window.URL.revokeObjectURL(url);
+                    }, 'image/png');
+                } catch (error) {
+                    console.error('Error creating QR download:', error);
+                    showToast('Error downloading QR code');
+                }
+            };
+            
+           
+            img.onerror = function() {
+                console.error('Error loading QR image');
+                showToast('Error downloading QR code');
+            };
+            
+           
+            const qrUrl = `https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=${encodeURIComponent(formLink.value)}`;
+            img.src = qrUrl;
+        });
+        
+       
+        formStatusFilter.addEventListener('change', filterAndDisplayForms);
+        
+       
+        responseSentimentFilter.addEventListener('change', function() {
+            const form = allForms.find(f => f.id === currentFormId);
+            if (form) {
+                loadFormResponses(form);
+            }
+        });
+        
+       
+        tabs.forEach(tab => {
+            tab.addEventListener('click', function() {
+                const tabName = this.getAttribute('data-tab');
+                switchTab(tabName);
+            });
+        });
+        
+        function switchTab(tabName) {
+           
+            tabs.forEach(tab => tab.classList.remove('active'));
+            tabContents.forEach(content => content.classList.remove('active'));
+            
+           
+            document.querySelector(`.tab[data-tab="${tabName}"]`).classList.add('active');
+            document.getElementById(`${tabName}Tab`).classList.add('active');
+            
+           
+            if (tabName === 'preview') {
+                updateFormPreview();
+            }
+        }
+        
+       
+        closeFormBuilderModal.addEventListener('click', () => {
+            formBuilderModal.classList.remove('active');
+        });
+        
+        cancelFormBtn.addEventListener('click', () => {
+            formBuilderModal.classList.remove('active');
+        });
+        
+       
+        formBuilderModal.addEventListener('click', (e) => {
+            if (e.target === formBuilderModal) {
+                formBuilderModal.classList.remove('active');
+            }
+        });
+        
+       
+        closeAnalysisModal.addEventListener('click', () => {
+            formAnalysisModal.classList.remove('active');
+        });
+        
+        closeAnalysisBtn.addEventListener('click', () => {
+            formAnalysisModal.classList.remove('active');
+        });
+        
+       
+        formAnalysisModal.addEventListener('click', (e) => {
+            if (e.target === formAnalysisModal) {
+                formAnalysisModal.classList.remove('active');
+            }
+        });
+        
+       
+        closeShareModal.addEventListener('click', () => {
+            shareFormModal.classList.remove('active');
+        });
+        
+        closeShareBtn.addEventListener('click', () => {
+            shareFormModal.classList.remove('active');
+        });
+        
+       
+        shareFormModal.addEventListener('click', (e) => {
+            if (e.target === shareFormModal) {
+                shareFormModal.classList.remove('active');
+            }
+        });
+        
+       
+        profileLink.addEventListener('click', openProfileModal);
+        
+        function openProfileModal() {
+           
+            if (currentUser) {
+                database.ref(`users/${currentUserEmail}`).once('value')
+                    .then((snapshot) => {
+                        const userData = snapshot.val() || {};
+                        const userName = userData.name || currentUser.displayName || currentUser.email.split('@')[0];
+                        
+                        profileName.value = userName;
+                        profileEmail.value = currentUser.email;
+                        profileRole.value = userData.role || 'Administrator';
+                        
+                       
+                        const avatarUrl = `https://ui-avatars.com/api/?name=${encodeURIComponent(userName)}&background=ff6b9d&color=fff`;
+                        
+                        if (userData.profileImage) {
+                            profileImage.src = userData.profileImage;
+                        } else {
+                            profileImage.src = avatarUrl;
+                        }
+                    });
+            }
+            
+           
+            userDropdown.classList.remove('active');
+            
+           
+            profileModal.classList.add('active');
+        }
+        
+        closeProfileModal.addEventListener('click', () => {
+            profileModal.classList.remove('active');
+        });
+        
+        cancelProfileBtn.addEventListener('click', () => {
+            profileModal.classList.remove('active');
+        });
+        
+        profileModal.addEventListener('click', (e) => {
+            if (e.target === profileModal) {
+                profileModal.classList.remove('active');
+            }
+        });
+        
+       
+        profileImageUpload.addEventListener('change', (e) => {
+            const file = e.target.files[0];
+            if (!file) return;
+            
+            const reader = new FileReader();
+            reader.onload = function(event) {
+                const imageDataUrl = event.target.result;
+                profileImage.src = imageDataUrl;
+            };
+            reader.readAsDataURL(file);
+        });
+        
+       
+        saveProfileBtn.addEventListener('click', () => {
+            const name = profileName.value;
+            const role = profileRole.value;
+            
+            const updates = {
+                name: name,
+                role: role
+            };
+            
+           
+            if (profileImage.src && !profileImage.src.includes('ui-avatars.com')) {
+                updates.profileImage = profileImage.src;
+            }
+            
+            showLoading();
+            
+            database.ref(`users/${currentUserEmail}`).update(updates)
+                .then(() => {
+                   
+                    userName.textContent = name;
+                    document.querySelector('.user-role').textContent = role;
+                    
+                   
+                    if (updates.profileImage) {
+                        userProfileImg.src = updates.profileImage;
+                    } else {
+                        const avatarUrl = `https://ui-avatars.com/api/?name=${encodeURIComponent(name)}&background=ff6b9d&color=fff`;
+                        userProfileImg.src = avatarUrl;
+                    }
+                    
+                    hideLoading();
+                    profileModal.classList.remove('active');
+                    showToast('Profile updated successfully');
+                })
+                .catch(error => {
+                    hideLoading();
+                    showToast('Error updating profile: ' + error.message);
+                });
+        });
+        
+       
+        settingsLink.addEventListener('click', openSettingsModal);
+        
+        function openSettingsModal() {
+           
+            database.ref(`users/${currentUserEmail}/settings`).once('value')
+                .then((snapshot) => {
+                    const settingsData = snapshot.val() || {};
+                    
+                    emailNotifications.checked = settingsData.emailNotifications !== false;
+                    pushNotifications.checked = settingsData.pushNotifications !== false;
+                    responseNotifications.value = settingsData.responseNotifications || 'all';
+                    aiAnalysisFrequency.value = settingsData.aiAnalysisFrequency || 'realtime';
+                });
+            
+           
+            userDropdown.classList.remove('active');
+            
+           
+            settingsModal.classList.add('active');
+        }
+        
+        closeSettingsModal.addEventListener('click', () => {
+            settingsModal.classList.remove('active');
+        });
+        
+        cancelSettingsBtn.addEventListener('click', () => {
+            settingsModal.classList.remove('active');
+        });
+        
+        settingsModal.addEventListener('click', (e) => {
+            if (e.target === settingsModal) {
+                settingsModal.classList.remove('active');
+            }
+        });
+        
+       
+        saveSettingsBtn.addEventListener('click', () => {
+            const settingsUpdates = {
+                emailNotifications: emailNotifications.checked,
+                pushNotifications: pushNotifications.checked,
+                responseNotifications: responseNotifications.value,
+                aiAnalysisFrequency: aiAnalysisFrequency.value
+            };
+            
+            showLoading();
+            
+            database.ref(`users/${currentUserEmail}/settings`).update(settingsUpdates)
+                .then(() => {
+                    hideLoading();
+                    settingsModal.classList.remove('active');
+                    showToast('Settings updated successfully');
+                })
+                .catch(error => {
+                    hideLoading();
+                    showToast('Error updating settings: ' + error.message);
+                });
+        });
+        
+       
+        function showToast(message) {
+            toast.textContent = message;
+            toast.classList.add('show');
+            
+            setTimeout(() => {
+                toast.classList.remove('show');
+            }, 3000);
+        }
+        
+       
+        function showLoading() {
+            loadingOverlay.classList.add('show');
+        }
+        
+       
+        function hideLoading() {
+            loadingOverlay.classList.remove('show');
+        }
+        
+       
+        function updateDashboardCards() {
+           
+            setTimeout(() => {
+                if (allForms.length > 0) {
+                   
+                    const totalForms = allForms.length;
+                    
+                   
+                    let totalResponses = 0;
+                    allForms.forEach(form => {
+                        if (form.responses) {
+                            totalResponses += Object.keys(form.responses).length;
+                        }
+                    });
+                    
+                   
+                    let positiveResponses = 0;
+                    let totalSentiments = 0;
+                    
+                    allForms.forEach(form => {
+                        if (form.responses) {
+                            Object.values(form.responses).forEach(response => {
+                                totalSentiments++;
+                                if (response.sentiment === 'positive') {
+                                    positiveResponses++;
+                                }
+                            });
+                        }
+                    });
+                    
+                    const satisfactionRate = totalSentiments > 0 ? Math.round((positiveResponses / totalSentiments) * 100) : 0;
+                    
+                   
+                    document.querySelector('.dashboard-cards .card:nth-child(1) .card-value').textContent = totalForms;
+                    document.querySelector('.dashboard-cards .card:nth-child(2) .card-value').textContent = totalResponses;
+                    document.querySelector('.dashboard-cards .card:nth-child(3) .card-value').textContent = `${satisfactionRate}%`;
+                }
+            }, 500);
+        }
+        
+       
+        document.addEventListener('DOMContentLoaded', function() {
+            const sidebarSettingsLink = document.querySelector('.sidebar-menu a i.fa-cog').parentElement;
+            const sidebarProfileLink = document.querySelector('.sidebar-menu a i.fa-user').parentElement;
+           
+            sidebarSettingsLink.addEventListener('click', function(e) {
+                e.preventDefault();
+                openSettingsModal();
+            });
+
+            sidebarProfileLink.addEventListener('click', function(e) {
+                e.preventDefault();
+                openProfileModal();
+            });
+        });
+    </script>
+    
+    <script type="module">
+        import { GoogleGenerativeAI } from "https://unpkg.com/@google/generative-ai?module";
+        
+        let geminiModel;
+        
+        async function initializeGemini() {
+            try {
+                const API_KEY = "REMOVED"; 
+                const genAI = new GoogleGenerativeAI(API_KEY);
+                geminiModel = genAI.getGenerativeModel({ model: "gemini-2.0-flash" });
+                console.log("Gemini AI initialized successfully");
+            } catch (error) {
+                console.error("Failed to initialize Gemini AI:", error);
+            }
+        }
+        
+       
+        initializeGemini();
+        
+       
+        window.generateRealAIInsights = async function(form, responses) {
+            if (!geminiModel) {
+                console.error("Gemini model not initialized");
+                return null;
+            }
+            
+           
+            let promptData = {
+                formTitle: form.title,
+                formDescription: form.description || '',
+                questions: form.questions || [],
+                responses: []
+            };
+            
+           
+            Object.entries(responses).forEach(([id, response]) => {
+                if (response.responses) {
+                    const processedResponse = {
+                        sentiment: response.sentiment,
+                        answers: {}
+                    };
+                    
+                   
+                    Object.entries(response.responses).forEach(([questionId, answer]) => {
+                       
+                        const question = promptData.questions.find(q => q.id === questionId);
+                        if (question) {
+                            processedResponse.answers[questionId] = {
+                                questionText: question.text,
+                                questionType: question.type,
+                                answer: answer
+                            };
+                            
+                           
+                            if (question.options) {
+                                processedResponse.answers[questionId].options = question.options;
+                            }
+                        }
+                    });
+                    
+                    promptData.responses.push(processedResponse);
+                }
+            });
+            
+           
+            const prompt = `
+            You are an AI feedback analyst for Tourly.ai. Analyze the following customer feedback data and identify 3 key pain points or areas for improvement.
+
+            FORM DETAILS:
+            Title: ${promptData.formTitle}
+            Description: ${promptData.formDescription}
+            
+            FEEDBACK DATA:
+            ${JSON.stringify(promptData.responses, null, 2)}
+            
+            Based on this feedback data, identify 3 insights or areas for improvement. 
+            
+            Return ONLY a valid JSON array with exactly 3 items, each containing 'title' and 'description' fields. The title should be concise (3-5 words) and the description should explain the issue and suggest an actionable solution (50-100 words).
+            
+            Example format:
+            [
+              {
+                "title": "Cleanliness Issues",
+                "description": "Multiple visitors rated cleanliness poorly. Several negative reviews specifically mentioned cleanliness issues in restrooms and common areas. Increasing cleaning frequency and implementing a checklist system could help address this concern."
+              },
+              {
+                "title": "Second Insight or pain point",
+                "description": "Description of the insight or pain point with actionable solution."
+              },
+              {
+                "title": "Third Insight or pain point",
+                "description": "Description of the insight or pain point with actionable solution."
+              }
+            ]
+            `;
+            
+            console.log("Sending to Gemini:", prompt);
+            
+            try {
+                const result = await geminiModel.generateContent([prompt]);
+                const response = await result.response.text();
+                console.log("Gemini raw response:", response);
+                
+               
+                let jsonMatch = response.match(/\[\s*\{[\s\S]*\}\s*\]/);
+                
+                if (jsonMatch) {
+                    try {
+                        const jsonStr = jsonMatch[0];
+                        console.log("Extracted JSON string:", jsonStr);
+                        const parsedResponse = JSON.parse(jsonStr);
+                        return parsedResponse;
+                    } catch (e) {
+                        console.error("Failed to parse extracted JSON:", e);
+                        return null;
+                    }
+                } else {
+                    console.error("No JSON array found in response");
+                    return null;
+                }
+            } catch (error) {
+                console.error("Error calling Gemini API:", error);
+                return null;
+            }
+        };
+    </script>
+    
+    <script>
+       
+        function displayRealAIInsights(insights) {
+            painPointsList.innerHTML = '';
+            
+            insights.forEach(insight => {
+                const painPointItem = document.createElement('div');
+                painPointItem.className = 'pain-point-item';
+                
+                painPointItem.innerHTML = `
+                    <div class="pain-point-title">${insight.title}</div>
+                    <div class="pain-point-description">${insight.description}</div>
+                `;
+                
+                painPointsList.appendChild(painPointItem);
+            });
+        }
+    </script>
+</body>
+</html>

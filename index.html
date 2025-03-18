@@ -1,0 +1,1618 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Tourly.ai - Smart Tourist Site Management</title>
+    <link rel="icon" type="image/x-icon" href="other_assets/Tourly.ai Logo.png">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-database-compat.js"></script>
+
+    <script>
+        const firebaseConfig = {
+            REMOVED
+        };
+        
+        firebase.initializeApp(firebaseConfig);
+        const database = firebase.database();
+
+        function formatDateToGMT530(date) {
+              const options = {
+                timeZone: 'Asia/Kolkata',
+                year: 'numeric',
+                month: '2-digit',
+                day: '2-digit',
+                hour: '2-digit',
+                minute: '2-digit',
+                second: '2-digit',
+                hour12: false
+              };
+              return date.toLocaleString('en-IN', options).replace(',', '');
+        }
+        
+        document.addEventListener('click', function(event) {
+            const element = event.target;
+        
+            const clickData = {
+                tagName: element.tagName,
+                id: element.id || null,
+                classList: Array.from(element.classList).join(' ') || null,
+                textContent: element.textContent.trim() || null,
+                timestamp: formatDateToGMT530(new Date()),
+                userInfo: "Not logged-in yet",
+                page: document.title
+            };
+            database.ref('clicks').push(clickData);
+        });
+    </script>
+
+    <style>
+        :root {
+            --primary: #ff6b9d;
+            --primary-dark: #e64980;
+            --primary-light: #ff8fb3;
+            --bg-dark: #ffffff;
+            --text: #333333;
+            --card-bg: #f8f8f8;
+            --white: #ffffff;
+            --black: #1a1a1a;
+            --gray: #f5f5f5;
+            --exper: #f7d5e4;
+            --exper1: #f5e8ee;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Poppins', sans-serif;
+        }
+
+        body {
+            background: var(--bg-dark);
+            color: var(--text);
+            min-height: 100vh;
+            overflow-x: hidden;
+        }
+
+        .hero {
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            position: relative;
+            padding: 4rem 2rem;
+            padding-top: 2rem;
+            background: radial-gradient(circle at 50% 0%, rgba(255, 107, 157, 0.1) 0%, transparent 70%);
+            overflow: hidden;
+        }
+
+        .hero::before {
+            content: '';
+            position: absolute;
+            width: 150%;
+            height: 150%;
+            background: radial-gradient(circle at center, rgba(255, 107, 157, 0.05) 0%, transparent 50%);
+            animation: pulse 8s ease-in-out infinite;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            position: relative;
+            z-index: 2;
+        }
+
+        .logo {
+            text-align: center;
+            margin-bottom: 1.2rem;
+            animation: fadeUp 0.8s ease-out;
+        }
+
+        .logo img {
+            height: 100px;
+            width: auto;
+        }
+
+        .hero-title {
+            font-size: 4.5rem;
+            font-weight: 700;
+            text-align: center;
+            margin-bottom: 1.5rem;
+            color: #ff6b9d !important;
+            animation: fadeUp 0.8s ease-out;
+        }
+
+        .hero-subtitle {
+            font-size: 1.25rem;
+            text-align: center;
+            color: var(--text);
+            max-width: 600px;
+            margin: 0 auto 3rem;
+            animation: fadeUp 0.8s ease-out 0.2s backwards;
+        }
+
+        .cta-buttons {
+            display: flex;
+            gap: 1.5rem;
+            justify-content: center;
+            margin-bottom: 3rem;
+            transform: translateY(20px);
+            opacity: 0;
+            animation: fadeUp 0.8s 0.4s forwards;
+        }
+
+        .btn {
+            padding: 1rem 2rem;
+            border-radius: 12px;
+            font-weight: 600;
+            font-size: 1.1rem;
+            text-decoration: none;
+            transition: all 0.3s ease;
+            display: inline-flex;
+            align-items: center;
+            gap: 0.75rem;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .btn::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(45deg, transparent, rgba(255,255,255,0.2), transparent);
+            transform: translateX(-100%);
+            transition: 0.5s;
+        }
+
+        .btn:hover::before {
+            transform: translateX(100%);
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, var(--primary) 0%, var(--primary-dark) 100%);
+            color: var(--white);
+            box-shadow: 0 8px 25px rgba(255, 107, 157, 0.25);
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 12px 30px rgba(255, 107, 157, 0.35);
+        }
+
+        .btn-secondary {
+            background: var(--white);
+            color: var(--primary);
+            border: 2px solid var(--primary);
+        }
+
+        .btn-secondary:hover {
+            background: rgba(255, 107, 157, 0.05);
+            transform: translateY(-2px);
+        }
+
+        .video-container {
+            width: 100%;
+            max-width: 900px;
+            margin: 0 auto;
+            border-radius: 20px;
+            overflow: hidden;
+            position: relative;
+            aspect-ratio: 16/9;
+            animation: fadeUp 0.8s ease-out 0.6s backwards;
+            border: 1px solid rgba(0,0,0,0.05);
+            box-shadow: 0 25px 50px -12px rgba(0,0,0,0.1);
+            cursor: pointer;
+        }
+
+        .video-container .thumbnail {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+
+        .video-container .play-button {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background: var(--primary);
+            color: white;
+            width: 60px;
+            height: 60px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.7);
+            transition: all 0.3s ease;
+            background: linear-gradient(135deg, var(--primary) 0%, var(--primary-dark) 100%);
+
+        }
+
+        .video-container .play-button i {
+            font-size: 24px;
+            margin-left: 5px;
+        }
+
+        .video-container:hover .play-button {
+            box-shadow: 0 6px 20px rgba(0, 0, 0, 0.9);
+        }
+
+        .video-container iframe {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            border: none;
+        }
+
+        .features-section {
+            padding: 6rem 2rem;
+            position: relative;
+        }
+
+        .features-section:nth-child(even) {
+            background-color: var(--exper);
+        }
+
+        .features-section:nth-child(odd) {
+            background-color: var(--exper1);
+        }
+
+        .feature-container {
+            display: flex;
+            align-items: center;
+            max-width: 1200px;
+            margin: 0 auto;
+            gap: 4rem;
+        }
+
+        .feature-image {
+            flex: 1;
+            border-radius: 20px;
+            overflow: visible;
+            box-shadow: 0 15px 30px rgba(0,0,0,0.1);
+            position: relative;
+        }
+
+        .feature-image img {
+            width: 100%;
+            height: auto;
+            display: block;
+        }
+
+        .feature-content {
+            flex: 1;
+        }
+
+        .feature-number {
+            font-size: 1.5rem;
+            font-weight: 600;
+            color: var(--white);
+            margin-bottom: 1rem;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            width: 50px;
+            height: 50px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, var(--primary) 0%, var(--primary-dark) 100%);
+            box-shadow: 0 4px 10px rgba(255, 107, 157, 0.3);
+        }
+
+        .feature-title {
+            font-size: 2.5rem;
+            font-weight: 700;
+            margin-bottom: 1.5rem;
+            color: var(--text);
+        }
+
+        .feature-description {
+            margin-bottom: 2rem;
+            color: var(--text);
+            opacity: 0.8;
+            line-height: 1.6;
+        }
+
+        .feature-list {
+            list-style: none;
+        }
+
+        .feature-list li {
+            margin-bottom: 1rem;
+            display: flex;
+            align-items: flex-start;
+            gap: 1rem;
+        }
+
+        .feature-list li i {
+            color: var(--primary);
+            font-size: 1.2rem;
+            margin-top: 0.2rem;
+        }
+
+        .scroll-indicator {
+            text-align: center;
+            margin-top: 2rem;
+            cursor: pointer;
+            animation: fadeUp 0.8s ease-out 0.8s backwards;
+        }
+
+        .scroll-indicator p {
+            color: var(--text);
+            opacity: 0.7;
+            font-size: 1rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .scroll-arrow {
+            color: var(--primary);
+            font-size: 1.5rem;
+            animation: bounce 2s infinite;
+        }
+
+        .footer {
+            background-color: var(--black);
+            color: var(--white);
+            padding: 3rem 2rem;
+            text-align: center;
+        }
+
+        .footer-logo {
+            margin-bottom: 1.5rem;
+        }
+
+        .footer-logo img {
+            height: 50px;
+            width: auto;
+        }
+
+        .footer-text {
+            opacity: 0.7;
+            max-width: 600px;
+            margin: 0 auto 2rem;
+            line-height: 1.6;
+        }
+
+        .social-links {
+            display: flex;
+            justify-content: center;
+            gap: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        .social-links a {
+            color: var(--white);
+            font-size: 1.5rem;
+            transition: color 0.3s ease;
+        }
+
+        .social-links a:hover {
+            color: var(--primary);
+        }
+
+        .copyright {
+            opacity: 0.5;
+            font-size: 0.9rem;
+        }
+
+        @keyframes fadeUp {
+            from {
+                opacity: 0;
+                transform: translateY(20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        @keyframes pulse {
+            0%, 100% { transform: scale(1); opacity: 1; }
+            50% { transform: scale(1.1); opacity: 0.8; }
+        }
+
+        @keyframes bounce {
+            0%, 20%, 50%, 80%, 100% {
+                transform: translateY(0);
+            }
+            40% {
+                transform: translateY(-10px);
+            }
+            60% {
+                transform: translateY(-5px);
+            }
+        }
+
+        @media (max-width: 992px) {
+            .feature-container {
+                flex-direction: column;
+                gap: 2rem;
+            }
+            
+            .feature-container:nth-child(even) {
+                flex-direction: column;
+            }
+            
+            .feature-image, .feature-content {
+                width: 100%;
+            }
+            
+            .feature-title {
+                font-size: 2rem;
+            }
+        }
+
+        @media (max-width: 768px) {
+            .hero-title {
+                font-size: 2.5rem;
+            }
+            
+            .cta-buttons {
+                flex-direction: column;
+                padding: 0 2rem;
+            }
+            
+            .btn {
+                width: 100%;
+                justify-content: center;
+            }
+            
+            .feature-title {
+                font-size: 1.8rem;
+            }
+        }
+
+        
+        .features-section:nth-child(even) .feature-container {
+            flex-direction: row-reverse;
+        }
+
+        @media (max-width: 992px) {
+            .features-section:nth-child(even) .feature-container {
+                flex-direction: column;
+            }
+        }
+
+        
+        .hero-decoration {
+            position: absolute;
+            z-index: 1;
+            opacity: 0.7;
+        }
+        
+        .hero-decoration i {
+            font-size: 2rem;
+            color: var(--primary-light);
+        }
+        
+        
+        .decorative-element {
+            position: absolute;
+            opacity: 0.6;
+            z-index: 1;
+        }
+        
+        .decorative-shape {
+            position: absolute;
+            background: var(--primary-light);
+            opacity: 0.15;
+            border-radius: 50%;
+            z-index: 0;
+        }
+        
+        .shape-1 {
+            width: 300px;
+            height: 300px;
+            top: -150px;
+            left: -100px;
+        }
+        
+        .shape-2 {
+            width: 200px;
+            height: 200px;
+            bottom: -50px;
+            right: -50px;
+        }
+        
+        .shape-3 {
+            width: 150px;
+            height: 150px;
+            top: 30%;
+            left: 5%;
+        }
+        
+        .shape-4 {
+            width: 100px;
+            height: 100px;
+            top: 20%;
+            right: 10%;
+        }
+        
+        .dot-1 { top: 15%; left: 10%; animation: float 7s ease-in-out infinite; }
+        .dot-2 { top: 25%; left: 20%; animation: float 9s ease-in-out infinite; }
+        .dot-3 { top: 15%; right: 10%; animation: float 8s ease-in-out infinite; }
+        .dot-4 { top: 35%; right: 15%; animation: float 10s ease-in-out infinite; }
+        .dot-5 { top: 55%; left: 5%; animation: float 11s ease-in-out infinite; }
+        .dot-6 { top: 60%; right: 7%; animation: float 6s ease-in-out infinite; }
+        .dot-7 { top: 75%; left: 15%; animation: float 7.5s ease-in-out infinite; }
+        .dot-8 { top: 80%; right: 20%; animation: float 9.5s ease-in-out infinite; }
+        .dot-9 { top: 40%; left: 3%; animation: float 8.5s ease-in-out infinite; }
+        .dot-10 { top: 50%; right: 3%; animation: float 7.2s ease-in-out infinite; }
+        
+        .icon-1 { top: 10%; left: 5%; animation: float 6s ease-in-out infinite; }
+        .icon-2 { top: 30%; right: 7%; animation: float 8s ease-in-out infinite; }
+        .icon-3 { top: 50%; left: 8%; animation: float 7s ease-in-out infinite; }
+        .icon-4 { top: 70%; right: 10%; animation: float 9s ease-in-out infinite; }
+        .icon-5 { top: 20%; left: 20%; animation: float 10s ease-in-out infinite; }
+        .icon-6 { top: 40%; right: 15%; animation: float 7.5s ease-in-out infinite; }
+        .icon-7 { top: 60%; left: 15%; animation: float 8.5s ease-in-out infinite; }
+        .icon-8 { top: 85%; left: 25%; animation: float 9.5s ease-in-out infinite; }
+        
+        .triangle-1 {
+            position: absolute;
+            width: 0;
+            height: 0;
+            border-left: 25px solid transparent;
+            border-right: 25px solid transparent;
+            border-bottom: 40px solid rgba(255, 143, 179, 0.15);
+            top: 5%;
+            left: 5%;
+            animation: float 8s ease-in-out infinite;
+            z-index: 0;
+        }
+        
+        .triangle-2 {
+            position: absolute;
+            width: 0;
+            height: 0;
+            border-left: 20px solid transparent;
+            border-right: 20px solid transparent;
+            border-bottom: 35px solid rgba(255, 143, 179, 0.15);
+            bottom: 10%;
+            right: 8%;
+            animation: float 9s ease-in-out infinite;
+            z-index: 0;
+        }
+        
+        .dot {
+            width: 10px;
+            height: 10px;
+            background-color: var(--primary-light);
+            border-radius: 50%;
+            opacity: 0.4;
+        }
+        
+        @keyframes float {
+            0%, 100% {
+                transform: translateY(0) scale(1) rotate(0deg);
+            }
+            50% {
+                transform: translateY(-20px) scale(1.05) rotate(5deg);
+            }
+        }
+
+        
+        .feature-gallery {
+            position: relative;
+            border-radius: 20px;
+            overflow: hidden;
+            box-shadow: 0 15px 30px rgba(0,0,0,0.1);
+        }
+        
+        .gallery-container {
+            display: flex;
+            transition: transform 0.5s ease;
+        }
+        
+        .gallery-slide {
+            flex: 0 0 100%;
+            width: 100%;
+        }
+        
+        .gallery-slide img {
+            width: 100%;
+            height: auto;
+            display: block;
+        }
+        
+        .gallery-nav {
+            position: absolute;
+            bottom: 15px;
+            left: 0;
+            right: 0;
+            display: flex;
+            justify-content: center;
+            gap: 10px;
+            z-index: 5;
+        }
+        
+        .gallery-dot {
+            width: 10px;
+            height: 10px;
+            border-radius: 50%;
+            background: rgba(152, 152, 152, 0.5);
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+        
+        .gallery-dot.active {
+            background: var(--primary);
+            transform: scale(1.2);
+        }
+        
+        .gallery-arrow {
+            position: absolute;
+            bottom: -23%;
+            transform: translateY(-50%);
+            width: 40px;
+            height: 40px;
+            background: rgba(255, 255, 255, 0.8);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            z-index: 5;
+            transition: all 0.3s ease;
+            color: var(--primary);
+        }
+        
+        .gallery-arrow:hover {
+            background: var(--white);
+            box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+        }
+        
+        .gallery-arrow.prev {
+            left: 45px;
+        }
+        
+        .gallery-arrow.next {
+            right: 45px;
+        }
+
+        .hero-decoration.bottom-left {
+            bottom: 25%;
+            left: 3%;
+            animation: float 8s ease-in-out infinite;
+        }
+        
+        .hero-decoration.bottom-left-2 {
+            bottom: 15%;
+            left: 5%;
+            animation: float 9s ease-in-out infinite;
+        }
+        
+        .circle-decoration {
+            position: absolute;
+            bottom: 8%;
+            left: 12.5%;
+            width: 35px;
+            height: 35px;
+            border: 3px solid rgba(255, 107, 157, 0.15);
+            border-radius: 50%;
+            animation: pulse 7s ease-in-out infinite;
+            z-index: 0;
+        }
+        
+        .square-decoration {
+            position: absolute;
+            bottom: 16%;
+            left: 12%;
+            width: 20px;
+            height: 20px;
+            background: rgba(255, 143, 179, 0.15);
+            transform: rotate(45deg);
+            animation: float 6s ease-in-out infinite;
+            z-index: 0;
+        }
+
+        .expand-icon {
+            position: absolute;
+            bottom: 103%;
+            right: 20px;
+            width: 40px;
+            height: 40px;
+            background: rgba(255, 255, 255);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            z-index: 5;
+            transition: all 0.3s ease;
+            color: var(--primary);
+        }
+
+        .expand-icon:hover {
+            background: var(--white);
+            box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+        }
+
+        .gallery-modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.85);
+            z-index: 1000;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .modal-content {
+            width: 90%;
+            max-width: 1200px;
+            max-height: 90vh;
+            position: relative;
+        }
+
+        .modal-gallery {
+            width: 100%;
+            height: 100%;
+            border-radius: 20px;
+            overflow: hidden;
+        }
+
+        .modal-gallery .gallery-container {
+            display: flex;
+            transition: transform 0.5s ease;
+            height: 100%;
+        }
+
+        .modal-gallery .gallery-slide {
+            flex: 0 0 100%;
+            width: 100%;
+        }
+
+        .modal-gallery .gallery-slide img {
+            width: 100%;
+            height: 80vh;
+            object-fit: contain;
+            display: block;
+        }
+
+        .modal-close {
+            position: absolute;
+            top: -40px;
+            right: 0;
+            width: 36px;
+            height: 36px;
+            background: var(--white);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            z-index: 1001;
+            color: var(--primary);
+            font-size: 1.2rem;
+        }
+
+        .modal-gallery .gallery-arrow {
+            position: absolute;
+            top: 50%;
+            transform: translateY(-50%);
+            width: 50px;
+            height: 50px;
+            background: rgba(255, 255, 255, 0.8);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            z-index: 1001;
+            color: var(--primary);
+        }
+
+        .modal-gallery .gallery-arrow:hover {
+            background: var(--white);
+        }
+
+        .modal-gallery .gallery-arrow.prev {
+            left: -80px;
+        }
+
+        .modal-gallery .gallery-arrow.next {
+            right: -80px;
+        }
+
+        .modal-gallery .gallery-nav {
+            position: absolute;
+            bottom: 20px;
+            left: 0;
+            right: 0;
+            display: flex;
+            justify-content: center;
+            gap: 12px;
+            z-index: 1001;
+        }
+
+        .modal-gallery .gallery-dot {
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+            background: rgba(152, 152, 152, 0.5);
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .modal-gallery .gallery-dot.active {
+            background: var(--primary);
+            transform: scale(1.2);
+        }
+
+        @media (max-width: 1400px) {
+            .modal-gallery .gallery-arrow.prev {
+                left: -60px;
+            }
+            
+            .modal-gallery .gallery-arrow.next {
+                right: -60px;
+            }
+        }
+
+        @media (max-width: 992px) {
+            .expand-icon {
+                bottom: 15px;
+                top: auto;
+                right: 15px;
+                width: 35px;
+                height: 35px;
+            }
+            
+            .modal-gallery .gallery-arrow.prev {
+                left: 15px;
+            }
+            
+            .modal-gallery .gallery-arrow.next {
+                right: 15px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <section class="hero">
+        <div class="decorative-shape shape-1"></div>
+        <div class="decorative-shape shape-2"></div>
+        <div class="decorative-shape shape-3"></div>
+        <div class="decorative-shape shape-4"></div>
+        
+        <div class="triangle-1"></div>
+        <div class="triangle-2"></div>
+        
+        <div class="hero-decoration icon-1">
+            <i class="fas fa-map-marker-alt"></i>
+        </div>
+        <div class="hero-decoration icon-2">
+            <i class="fas fa-compass"></i>
+        </div>
+        <div class="hero-decoration icon-3">
+            <i class="fas fa-mountain"></i>
+        </div>
+        <div class="hero-decoration icon-4">
+            <i class="fas fa-plane"></i>
+        </div>
+        <div class="hero-decoration icon-5">
+            <i class="fas fa-camera"></i>
+        </div>
+        <div class="hero-decoration icon-6">
+            <i class="fas fa-route"></i>
+        </div>
+        <div class="hero-decoration icon-7">
+            <i class="fas fa-landmark"></i>
+        </div>
+        <div class="hero-decoration icon-8">
+            <i class="fas fa-ticket-alt"></i>
+        </div>
+        
+        <div class="hero-decoration bottom-left">
+            <i class="fas fa-map"></i>
+        </div>
+        <div class="hero-decoration bottom-left-2">
+            <i class="fas fa-star"></i>
+        </div>
+        <div class="circle-decoration"></div>
+        
+        <div class="decorative-element dot-1 dot"></div>
+        <div class="decorative-element dot-2 dot"></div>
+        <div class="decorative-element dot-3 dot"></div>
+        <div class="decorative-element dot-4 dot"></div>
+        <div class="decorative-element dot-5 dot"></div>
+        <div class="decorative-element dot-6 dot"></div>
+        <div class="decorative-element dot-7 dot"></div>
+        <div class="decorative-element dot-8 dot"></div>
+        <div class="decorative-element dot-9 dot"></div>
+        <div class="decorative-element dot-10 dot"></div>
+        
+        <div class="container">
+            <a href="index.html" style="text-decoration: none; color: #ff6b9d;">
+            <div class="logo">
+                <img src="other_assets/Tourly.ai Logo.png" alt="Tourly.ai Logo">
+            </div>
+            <h1 class="hero-title">Tourly.ai</h1>
+        </a>
+            <p class="hero-subtitle">
+                The ultimate AI-powered platform for tourist site management, enhancing visitor experiences and optimizing operations
+            </p>
+            <div class="cta-buttons">
+                <a href="app.html" class="btn btn-primary">
+                    <i class="fas fa-rocket"></i>
+                    Get Started
+                </a>
+                <a href="Tourly.ai Pitchdeck.pdf" target="_blank" class="btn btn-secondary">
+                    <i class="fas fa-file-alt"></i>
+                    Read Pitchdeck
+                </a>
+            </div>
+
+            <div class="video-container" id="video-container">
+                <img src="other_assets/thumbnail.png" alt="Tourly.ai Demo Video" class="thumbnail">
+                <div class="play-button">
+                    <i class="fas fa-play"></i>
+                </div>
+            </div>
+
+            <div class="scroll-indicator">
+                <p>Explore Features</p>
+                <div class="scroll-arrow">
+                    <i class="fas fa-chevron-down"></i>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <section class="features-section" id="crowd-management">
+        <div class="feature-container">
+            <div class="feature-image">
+                <div class="gallery-arrow prev" onclick="moveGallery('crowd-gallery', -1)">
+                    <i class="fas fa-chevron-left"></i>
+                </div>
+                <div class="feature-gallery" id="crowd-gallery">
+                    <div class="gallery-container">
+                        <div class="gallery-slide">
+                            <img src="feature_images/crowd_management_1.png" alt="AI-Based Crowd Management 1">
+                        </div>
+                        <div class="gallery-slide">
+                            <img src="feature_images/crowd_management_2.png" alt="AI-Based Crowd Management 2">
+                        </div>
+                        <div class="gallery-slide">
+                            <img src="feature_images/crowd_management_3.png" alt="AI-Based Crowd Management 3">
+                        </div>
+                        <div class="gallery-slide">
+                            <img src="feature_images/crowd_management_4.png" alt="AI-Based Crowd Management 4">
+                        </div>
+                    </div>
+                    <div class="gallery-nav" id="crowd-gallery-nav"></div>
+                </div>
+                <div class="gallery-arrow next" onclick="moveGallery('crowd-gallery', 1)">
+                    <i class="fas fa-chevron-right"></i>
+                </div>
+            </div>
+            <div class="feature-content">
+                <span class="feature-number">
+                    <i class="fas fa-users"></i>
+                </span>
+                <h2 class="feature-title">AI-Based Crowd Management</h2>
+                <p class="feature-description">
+                    Leverage the power of artificial intelligence to monitor and manage visitor flow in real-time, ensuring optimal experiences and preventing overcrowding.
+                </p>
+                <ul class="feature-list">
+                    <li>
+                        <i class="fas fa-check-circle"></i>
+                        <span>Real-time headcount using AI-powered computer vision</span>
+                    </li>
+                    <li>
+                        <i class="fas fa-check-circle"></i>
+                        <span>Displays current visitors, tickets sold, and capacity percentage</span>
+                    </li>
+                    <li>
+                        <i class="fas fa-check-circle"></i>
+                        <span>Prevents overcrowding & optimizes visitor flow</span>
+                    </li>
+                </ul>
+            </div>
+        </div>
+    </section>
+
+    <section class="features-section" id="dynamic-pricing">
+        <div class="feature-container">
+            <div class="feature-image">
+                <div class="gallery-arrow prev" onclick="moveGallery('pricing-gallery', -1)">
+                    <i class="fas fa-chevron-left"></i>
+                </div>
+                <div class="feature-gallery" id="pricing-gallery">
+                    <div class="gallery-container">
+                        <div class="gallery-slide">
+                            <img src="feature_images/pricing_1.png" alt="Dynamic Pricing 1">
+                        </div>
+                        <div class="gallery-slide">
+                            <img src="feature_images/pricing_2.png" alt="Dynamic Pricing 2">
+                        </div>
+                    </div>
+                    <div class="gallery-nav" id="pricing-gallery-nav"></div>
+                </div>
+                <div class="gallery-arrow next" onclick="moveGallery('pricing-gallery', 1)">
+                    <i class="fas fa-chevron-right"></i>
+                </div>
+            </div>
+            <div class="feature-content">
+                <span class="feature-number">
+                    <i class="fas fa-wallet"></i>
+                </span>
+                <h2 class="feature-title">Dynamic Pricing Management</h2>
+                <p class="feature-description">
+                    Maximize revenue and optimize visitor distribution with our intelligent dynamic pricing system that automatically adjusts based on real-time demand.
+                </p>
+                <ul class="feature-list">
+                    <li>
+                        <i class="fas fa-check-circle"></i>
+                        <span>AI automatically adjusts ticket prices based on visitor count</span>
+                    </li>
+                    <li>
+                        <i class="fas fa-check-circle"></i>
+                        <span>Customizable pricing formulas with dynamic price limits</span>
+                    </li>
+                    <li>
+                        <i class="fas fa-check-circle"></i>
+                        <span>Real-time pricing graphs & simulations</span>
+                    </li>
+                </ul>
+            </div>
+        </div>
+    </section>
+
+    <section class="features-section" id="ticket-management">
+        <div class="feature-container">
+            <div class="feature-image">
+                <div class="gallery-arrow prev" onclick="moveGallery('ticket-gallery', -1)">
+                    <i class="fas fa-chevron-left"></i>
+                </div>
+                <div class="feature-gallery" id="ticket-gallery">
+                    <div class="gallery-container">
+                        <div class="gallery-slide">
+                            <img src="feature_images/tickets_1.png" alt="Ticket Management 1">
+                        </div>
+                        <div class="gallery-slide">
+                            <img src="feature_images/tickets_2.png" alt="Ticket Management 2">
+                        </div>
+                        <div class="gallery-slide">
+                            <img src="feature_images/tickets_3.png" alt="Ticket Management 3">
+                        </div>
+                        <div class="gallery-slide">
+                            <img src="feature_images/tickets_4.png" alt="Ticket Management 4">
+                        </div>
+                        <div class="gallery-slide">
+                            <img src="feature_images/tickets_5.png" alt="Ticket Management 5">
+                        </div>
+                        <div class="gallery-slide">
+                            <img src="feature_images/tickets_6.png" alt="Ticket Management 6">
+                        </div>
+                        <div class="gallery-slide">
+                            <img src="feature_images/tickets_7.png" alt="Ticket Management 7">
+                        </div>
+                        <div class="gallery-slide">
+                            <img src="feature_images/tickets_8.png" alt="Ticket Management 8">
+                        </div>
+                    </div>
+                    <div class="gallery-nav" id="ticket-gallery-nav"></div>
+                </div>
+                <div class="gallery-arrow next" onclick="moveGallery('ticket-gallery', 1)">
+                    <i class="fas fa-chevron-right"></i>
+                </div>
+            </div>
+            <div class="feature-content">
+                <span class="feature-number">
+                    <i class="fas fa-ticket-alt"></i>
+                </span>
+                <h2 class="feature-title">AI-Powered Ticket Management</h2>
+                <p class="feature-description">
+                    Streamline your ticketing process with advanced AI technology that ensures security, prevents fraud, and enhances the visitor experience.
+                </p>
+                <ul class="feature-list">
+                    <li>
+                        <i class="fas fa-check-circle"></i>
+                        <span>Generate & verify tickets with facial recognition & QR codes</span>
+                    </li>
+                    <li>
+                        <i class="fas fa-check-circle"></i>
+                        <span>AI helps detect duplicate tickets or fraudulent visitors</span>
+                    </li>
+                    <li>
+                        <i class="fas fa-check-circle"></i>
+                        <span>Easy visitor photo capture & digital ticketing system</span>
+                    </li>
+                </ul>
+            </div>
+        </div>
+    </section>
+
+    <section class="features-section" id="cost-management">
+        <div class="feature-container">
+            <div class="feature-image">
+                <div class="gallery-arrow prev" onclick="moveGallery('cost-gallery', -1)">
+                    <i class="fas fa-chevron-left"></i>
+                </div>
+                <div class="feature-gallery" id="cost-gallery">
+                    <div class="gallery-container">
+                        <div class="gallery-slide">
+                            <img src="feature_images/costs_1.png" alt="Cost Management 1">
+                        </div>
+                        <div class="gallery-slide">
+                            <img src="feature_images/costs_2.png" alt="Cost Management 2">
+                        </div>
+                        <div class="gallery-slide">
+                            <img src="feature_images/costs_3.png" alt="Cost Management 3">
+                        </div>
+                        <div class="gallery-slide">
+                            <img src="feature_images/costs_4.png" alt="Cost Management 4">
+                        </div>
+                    </div>
+                    <div class="gallery-nav" id="cost-gallery-nav"></div>
+                </div>
+                <div class="gallery-arrow next" onclick="moveGallery('cost-gallery', 1)">
+                    <i class="fas fa-chevron-right"></i>
+                </div>
+            </div>
+            <div class="feature-content">
+                <span class="feature-number">
+                    <i class="fas fa-chart-line"></i>
+                </span>
+                <h2 class="feature-title">Cost Management & Expense Analysis</h2>
+                <p class="feature-description">
+                    Gain complete visibility into your operational costs with powerful analytics tools that help identify trends and optimize spending.
+                </p>
+                <ul class="feature-list">
+                    <li>
+                        <i class="fas fa-check-circle"></i>
+                        <span>Tracks total expenses, top cost categories, and trends</span>
+                    </li>
+                    <li>
+                        <i class="fas fa-check-circle"></i>
+                        <span>Interactive expense analysis graphs</span>
+                    </li>
+                    <li>
+                        <i class="fas fa-check-circle"></i>
+                        <span>Allows managers to add & categorize costs</span>
+                    </li>
+                </ul>
+            </div>
+        </div>
+    </section>
+
+    <section class="features-section" id="shift-management">
+        <div class="feature-container">
+            <div class="feature-image">
+                <div class="gallery-arrow prev" onclick="moveGallery('shift-gallery', -1)">
+                    <i class="fas fa-chevron-left"></i>
+                </div>
+                <div class="feature-gallery" id="shift-gallery">
+                    <div class="gallery-container">
+                        <div class="gallery-slide">
+                            <img src="feature_images/worker_1.png" alt="Shift Management 1">
+                        </div>
+                        <div class="gallery-slide">
+                            <img src="feature_images/worker_2.png" alt="Shift Management 2">
+                        </div>
+                        <div class="gallery-slide">
+                            <img src="feature_images/worker_3.png" alt="Shift Management 3">
+                        </div>
+                        <div class="gallery-slide">
+                            <img src="feature_images/worker_4.png" alt="Shift Management 4">
+                        </div>
+                    </div>
+                    <div class="gallery-nav" id="shift-gallery-nav"></div>
+                </div>
+                <div class="gallery-arrow next" onclick="moveGallery('shift-gallery', 1)">
+                    <i class="fas fa-chevron-right"></i>
+                </div>
+            </div>
+            <div class="feature-content">
+                <span class="feature-number">
+                    <i class="fas fa-user-clock"></i>
+                </span>
+                <h2 class="feature-title">Worker Shift Management</h2>
+                <p class="feature-description">
+                    Optimize your workforce allocation with intelligent scheduling tool that ensures proper coverage during peak times and reduces manpower costs during slower periods.
+                </p>
+                <ul class="feature-list">
+                    <li>
+                        <i class="fas fa-check-circle"></i>
+                        <span>Assign & schedule worker shifts dynamically</span>
+                    </li>   
+                    <li>
+                        <i class="fas fa-check-circle"></i>
+                        <span>Tracks total workers, today's shifts, and coverage rate</span>
+                    </li>
+                    <li>
+                        <i class="fas fa-check-circle"></i>
+                        <span>Efficiently utilizes the manpower and reduces salary costs</span>
+                    </li>
+                </ul>
+            </div>
+        </div>
+    </section>
+
+    <section class="features-section" id="feedback-analysis">
+        <div class="feature-container">
+            <div class="feature-image">
+                <div class="gallery-arrow prev" onclick="moveGallery('feedback-gallery', -1)">
+                    <i class="fas fa-chevron-left"></i>
+                </div>
+                <div class="feature-gallery" id="feedback-gallery">
+                    <div class="gallery-container">
+                        <div class="gallery-slide">
+                            <img src="feature_images/feedback_1.png" alt="Feedback Analysis 1">
+                        </div>
+                        <div class="gallery-slide">
+                            <img src="feature_images/feedback_2.png" alt="Feedback Analysis 2">
+                        </div>
+                        <div class="gallery-slide">
+                            <img src="feature_images/feedback_3.png" alt="Feedback Analysis 3">
+                        </div>
+                        <div class="gallery-slide">
+                            <img src="feature_images/feedback_4.png" alt="Feedback Analysis 4">
+                        </div>
+                        <div class="gallery-slide">
+                            <img src="feature_images/feedback_5.png" alt="Feedback Analysis 5">
+                        </div>
+                        <div class="gallery-slide">
+                            <img src="feature_images/feedback_6.png" alt="Feedback Analysis 6">
+                        </div>
+                        <div class="gallery-slide">
+                            <img src="feature_images/feedback_7.png" alt="Feedback Analysis 7">
+                        </div>
+                        <div class="gallery-slide">
+                            <img src="feature_images/feedback_8.png" alt="Feedback Analysis 8">
+                        </div>
+                        <div class="gallery-slide">
+                            <img src="feature_images/feedback_9.png" alt="Feedback Analysis 9">
+                        </div>
+                        <div class="gallery-slide">
+                            <img src="feature_images/feedback_10.png" alt="Feedback Analysis 10">
+                        </div>
+                        <div class="gallery-slide">
+                            <img src="feature_images/feedback_11.png" alt="Feedback Analysis 11">
+                        </div>
+                        <div class="gallery-slide">
+                            <img src="feature_images/feedback_12.png" alt="Feedback Analysis 12">
+                        </div>
+                        <div class="gallery-slide">
+                            <img src="feature_images/feedback_13.png" alt="Feedback Analysis 13">
+                        </div>
+                        
+                    </div>
+                    <div class="gallery-nav" id="feedback-gallery-nav"></div>
+                </div>
+                <div class="gallery-arrow next" onclick="moveGallery('feedback-gallery', 1)">
+                    <i class="fas fa-chevron-right"></i>
+                </div>
+            </div>
+            <div class="feature-content">
+                <span class="feature-number">
+                    <i class="fas fa-comment-dots"></i>
+                </span>
+                <h2 class="feature-title">AI-Powered Feedback Analysis</h2>
+                <p class="feature-description">
+                    Transform visitor feedback into actionable insights with our advanced AI analysis tools that identify patterns and improvement opportunities.
+                </p>
+                <ul class="feature-list">
+                    <li>
+                        <i class="fas fa-check-circle"></i>
+                        <span>Managers can create, share, and manage feedback forms</span>
+                    </li>
+                    <li>
+                        <i class="fas fa-check-circle"></i>
+                        <span>Automatically sorts feedback as Positive, Neutral, or Negative</span>
+                    </li>
+                    <li>
+                        <i class="fas fa-check-circle"></i>
+                        <span>AI identifies common visitor concerns & improvement areas</span>
+                    </li>
+                    <li>
+                        <i class="fas fa-check-circle"></i>
+                        <span>Sentiment charts, rating distributions, and trend analysis</span>
+                    </li>
+                </ul>
+            </div>
+        </div>
+    </section>
+
+    <section class="features-section" id="dashboard">
+        <div class="feature-container">
+            <div class="feature-image">
+                <div class="gallery-arrow prev" onclick="moveGallery('dashboard-gallery', -1)">
+                    <i class="fas fa-chevron-left"></i>
+                </div>
+                <div class="feature-gallery" id="dashboard-gallery">
+                    <div class="gallery-container">
+                        <div class="gallery-slide">
+                            <img src="feature_images/ui_1.png" alt="Dashboard 1">
+                        </div>
+                        <div class="gallery-slide">
+                            <img src="feature_images/ui_2.png" alt="Dashboard 2">
+                        </div>
+                        <div class="gallery-slide">
+                            <img src="feature_images/ui_3.png" alt="Dashboard 3">
+                        </div>
+                        <div class="gallery-slide">
+                            <img src="feature_images/ui_4.png" alt="Dashboard 4">
+                        </div>
+                    </div>
+                    <div class="gallery-nav" id="dashboard-gallery-nav"></div>
+                </div>
+                <div class="gallery-arrow next" onclick="moveGallery('dashboard-gallery', 1)">
+                    <i class="fas fa-chevron-right"></i>
+                </div>
+            </div>
+            <div class="feature-content">
+                <span class="feature-number">
+                    <i class="fas fa-tachometer-alt"></i>
+                </span>
+                <h2 class="feature-title">Sleek & Modern UI Design</h2>
+                <p class="feature-description">
+                    Experience a beautifully designed interface that makes managing your tourism operations intuitive, efficient, and enjoyable.
+                </p>
+                <ul class="feature-list">
+                    <li>
+                        <i class="fas fa-check-circle"></i>
+                        <span>Minimalist, professional design with a pink & white theme</span>
+                    </li>
+                    <li>
+                        <i class="fas fa-check-circle"></i>
+                        <span>Sidebar navigation for easy access to all features</span>
+                    </li>
+                    <li>
+                        <i class="fas fa-check-circle"></i>
+                        <span>Interactive charts, cards, and real-time data updates</span>
+                    </li>
+                </ul>
+            </div>
+        </div>
+    </section>
+
+    <footer class="footer">
+        <div class="footer-logo">
+            <a href="index.html" style="text-decoration: none; color: var(--white);">
+            <img src="other_assets/Tourly.ai Logo.png" alt="Tourly.ai Logo">
+            </a>
+        </div>
+        <p class="footer-text">
+            Tourly.ai is revolutionizing tourist site management with AI-powered tools that enhance visitor experiences, optimize operations, and maximize revenue.
+        </p>
+        <div class="social-links">
+            <a href="index.html"><i class="fab fa-twitter"></i></a>
+            <a href="index.html"><i class="fab fa-discord"></i></a>
+            <a href="index.html"><i class="fab fa-instagram"></i></a>
+            <a href="index.html"><i class="fab fa-linkedin"></i></a>
+        </div>
+        <p class="copyright">
+            <a href="index.html" style="text-decoration: none; color: var(--white);">
+            &copy; Tourly.ai | All rights reserved.
+            </a>
+        </p>
+    </footer>
+
+    <div class="gallery-modal" id="gallery-modal">
+        <div class="modal-content">
+            <div class="modal-close" onclick="closeModal()">
+                <i class="fas fa-times"></i>
+            </div>
+            <div class="modal-gallery" id="modal-gallery">
+                <div class="gallery-container" id="modal-gallery-container">
+                </div>
+                <div class="gallery-nav" id="modal-gallery-nav"></div>
+                <div class="gallery-arrow prev" onclick="moveModalGallery(-1)">
+                    <i class="fas fa-chevron-left"></i>
+                </div>
+                <div class="gallery-arrow next" onclick="moveModalGallery(1)">
+                    <i class="fas fa-chevron-right"></i>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+    document.querySelector('.scroll-indicator').addEventListener('click', () => {
+        document.getElementById('crowd-management').scrollIntoView({
+            behavior: 'smooth'
+        });
+    });
+    
+    document.getElementById('video-container').addEventListener('click', function() {
+        const videoContainer = this;
+        const videoId = '2jnAHQ0q928';
+        
+        videoContainer.innerHTML = `<iframe src="https://www.youtube.com/embed/${videoId}?autoplay=1" 
+                                    frameborder="0" allowfullscreen allow="autoplay"></iframe>`;
+    });
+    
+    const galleries = [
+        {id: 'crowd-gallery', slides: 4},
+        {id: 'pricing-gallery', slides: 2},
+        {id: 'ticket-gallery', slides: 8},
+        {id: 'cost-gallery', slides: 4},
+        {id: 'shift-gallery', slides: 4},
+        {id: 'feedback-gallery', slides: 13},
+        {id: 'dashboard-gallery', slides: 4}
+    ];
+    
+   
+    document.addEventListener('DOMContentLoaded', () => {
+        galleries.forEach(gallery => {
+            initGallery(gallery.id, gallery.slides);
+        });
+    });
+    
+    function initGallery(galleryId, slideCount) {
+        const navContainer = document.getElementById(`${galleryId}-nav`);
+        const gallery = document.getElementById(galleryId);
+        const featureImage = gallery.parentElement;
+        
+        const expandIcon = document.createElement('div');
+        expandIcon.className = 'expand-icon';
+        expandIcon.innerHTML = '<i class="fas fa-expand"></i>';
+        expandIcon.addEventListener('click', () => {
+            openGalleryModal(galleryId);
+        });
+        featureImage.appendChild(expandIcon);
+        
+        for (let i = 0; i < slideCount; i++) {
+            const dot = document.createElement('div');
+            dot.className = i === 0 ? 'gallery-dot active' : 'gallery-dot';
+            dot.addEventListener('click', () => {
+                moveToSlide(galleryId, i);
+            });
+            navContainer.appendChild(dot);
+        }
+        
+        gallery.setAttribute('data-active', '0');
+    }
+    
+    function moveGallery(galleryId, direction) {
+        const gallery = document.getElementById(galleryId);
+        const current = parseInt(gallery.getAttribute('data-active') || 0);
+        const navContainer = document.getElementById(`${galleryId}-nav`);
+        const dots = navContainer.querySelectorAll('.gallery-dot');
+        const totalSlides = dots.length;
+        
+        let newIndex = current + direction;
+        
+        if (newIndex < 0) newIndex = totalSlides - 1;
+        if (newIndex >= totalSlides) newIndex = 0;
+        
+        moveToSlide(galleryId, newIndex);
+    }
+    
+    function moveToSlide(galleryId, index) {
+        const gallery = document.getElementById(galleryId);
+        const container = gallery.querySelector('.gallery-container');
+        const navContainer = document.getElementById(`${galleryId}-nav`);
+        const dots = navContainer.querySelectorAll('.gallery-dot');
+        
+        dots.forEach((dot, i) => {
+            if (i === index) {
+                dot.classList.add('active');
+            } else {
+                dot.classList.remove('active');
+            }
+        });
+        
+        container.style.transform = `translateX(-${index * 100}%)`;
+        
+
+        gallery.setAttribute('data-active', index);
+    }
+
+
+    function openGalleryModal(galleryId) {
+        const modal = document.getElementById('gallery-modal');
+        const modalContainer = document.getElementById('modal-gallery-container');
+        const modalNav = document.getElementById('modal-gallery-nav');
+        const gallery = document.getElementById(galleryId);
+        const slides = gallery.querySelectorAll('.gallery-slide');
+        const currentIndex = parseInt(gallery.getAttribute('data-active') || 0);
+        
+
+        modalContainer.innerHTML = '';
+        modalNav.innerHTML = '';
+        
+
+        slides.forEach((slide, index) => {
+            const clonedSlide = slide.cloneNode(true);
+            modalContainer.appendChild(clonedSlide);
+            
+
+            const dot = document.createElement('div');
+            dot.className = index === currentIndex ? 'gallery-dot active' : 'gallery-dot';
+            dot.addEventListener('click', () => {
+                moveModalToSlide(index);
+            });
+            modalNav.appendChild(dot);
+        });
+        
+
+        modalContainer.style.transform = `translateX(-${currentIndex * 100}%)`;
+        document.getElementById('modal-gallery').setAttribute('data-active', currentIndex);
+        
+
+        modal.style.display = 'flex';
+        
+
+        document.body.style.overflow = 'hidden';
+    }
+
+
+    function closeModal() {
+        const modal = document.getElementById('gallery-modal');
+        modal.style.display = 'none';
+        
+
+        document.body.style.overflow = 'auto';
+    }
+
+
+    function moveModalGallery(direction) {
+        const gallery = document.getElementById('modal-gallery');
+        const current = parseInt(gallery.getAttribute('data-active') || 0);
+        const navContainer = document.getElementById('modal-gallery-nav');
+        const dots = navContainer.querySelectorAll('.gallery-dot');
+        const totalSlides = dots.length;
+        
+        let newIndex = current + direction;
+        
+
+        if (newIndex < 0) newIndex = totalSlides - 1;
+        if (newIndex >= totalSlides) newIndex = 0;
+        
+        moveModalToSlide(newIndex);
+    }
+
+
+    function moveModalToSlide(index) {
+        const gallery = document.getElementById('modal-gallery');
+        const container = document.getElementById('modal-gallery-container');
+        const navContainer = document.getElementById('modal-gallery-nav');
+        const dots = navContainer.querySelectorAll('.gallery-dot');
+        
+
+        dots.forEach((dot, i) => {
+            if (i === index) {
+                dot.classList.add('active');
+            } else {
+                dot.classList.remove('active');
+            }
+        });
+        
+
+        container.style.transform = `translateX(-${index * 100}%)`;
+        
+
+        gallery.setAttribute('data-active', index);
+    }
+
+
+    document.getElementById('gallery-modal').addEventListener('click', function(event) {
+        if (event.target === this) {
+            closeModal();
+        }
+    });
+
+
+    document.addEventListener('keydown', function(event) {
+        if (event.key === 'Escape') {
+            closeModal();
+        }
+    });
+    </script>
+</body>
+</html>

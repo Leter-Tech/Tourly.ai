@@ -1,0 +1,1026 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Feedback Form - Powered by Tourly.ai</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="icon" type="image/x-icon" href="other_assets/Tourly.ai Logo.png">
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-database-compat.js"></script>
+    <script type="module">
+        import { GoogleGenerativeAI } from "https://unpkg.com/@google/generative-ai?module";
+        
+        let geminiModel;
+        
+        async function initializeGemini() {
+            try {
+                const API_KEY = "REMOVED"; 
+                const genAI = new GoogleGenerativeAI(API_KEY);
+                geminiModel = genAI.getGenerativeModel({ model: "gemini-2.0-flash" });
+                console.log("Gemini AI initialized successfully");
+            } catch (error) {
+                console.error("Failed to initialize Gemini AI:", error);
+            }
+        }
+        
+       
+        initializeGemini();
+        
+        async function analyzeWithGemini(questionInfo, answer) {
+            if (!geminiModel) {
+                console.error("Gemini model not initialized");
+                return 'neutral';
+            }
+            
+            let prompt = "";
+            
+            if (questionInfo.type === 'multiple-choice') {
+                prompt = `Analyze the sentiment in this survey response:
+                    Question: ${questionInfo.text}
+                    Options: ${questionInfo.options.join(', ')}
+                    User selected: ${answer}
+                    
+                    Return only a valid JSON object with the sentiment: {"sentiment": "positive"}, {"sentiment": "negative"}, or {"sentiment": "neutral"}`;
+                
+            } else if (questionInfo.type === 'checkbox') {
+                prompt = `Analyze the sentiment in this survey response:
+                    Question: ${questionInfo.text}
+                    Options: ${questionInfo.options.join(', ')}
+                    User selected: ${answer}
+                    
+                    Return only a valid JSON object with the sentiment: {"sentiment": "positive"}, {"sentiment": "negative"}, or {"sentiment": "neutral"}`;
+                
+            } else if (questionInfo.type === 'text') {
+                prompt = `Analyze the sentiment in this survey response:
+                    Question: ${questionInfo.text}
+                    User response: ${answer}
+                    
+                    Return only a valid JSON object with the sentiment: {"sentiment": "positive"}, {"sentiment": "negative"}, or {"sentiment": "neutral"}`;
+            }
+            
+            console.log("Sending to Gemini:", prompt);
+            
+            try {
+                const result = await geminiModel.generateContent([prompt]);
+                const response = await result.response.text();
+                console.log("Gemini raw response:", response);
+                
+               
+                let jsonMatch = response.match(/\{[\s\S]*"sentiment"[\s\S]*:[\s\S]*"(positive|negative|neutral)"[\s\S]*\}/);
+                let parsedSentiment = 'neutral';
+                
+                if (jsonMatch) {
+                    try {
+                        const jsonStr = jsonMatch[0];
+                        console.log("Extracted JSON string:", jsonStr);
+                        const parsedResponse = JSON.parse(jsonStr);
+                        parsedSentiment = parsedResponse.sentiment || 'neutral';
+                        console.log("Parsed sentiment:", parsedSentiment);
+                    } catch (e) {
+                        console.error("Failed to parse extracted JSON:", e);
+                    }
+                } else {
+                   
+                    console.log("JSON pattern not found, trying simple text matching");
+                    if (response.includes('"sentiment": "positive"') || response.includes('"sentiment":"positive"')) {
+                        parsedSentiment = 'positive';
+                    } else if (response.includes('"sentiment": "negative"') || response.includes('"sentiment":"negative"')) {
+                        parsedSentiment = 'negative';
+                    }
+                    console.log("Sentiment from text matching:", parsedSentiment);
+                }
+                
+                return parsedSentiment;
+            } catch (error) {
+                console.error("Error calling Gemini API:", error);
+                return 'neutral';
+            }
+        }
+        
+       
+        window.analyzeWithGemini = analyzeWithGemini;
+    </script>
+    <style>
+        :root {
+            --primary: #ff6b9d;
+            --primary-light: #ff8fb3;
+            --primary-dark: #e64980;
+            --black: #1a1a1a;
+            --white: #ffffff;
+            --gray: #f5f5f5;
+            --dark-gray: #333333;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Poppins', sans-serif;
+        }
+
+        body {
+            background-color: var(--gray);
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 30px 15px;
+        }
+
+        .container {
+            width: 100%;
+            max-width: 800px;
+            background-color: var(--white);
+            border-radius: 20px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+            overflow: hidden;
+        }
+
+        .form-header {
+            background-color: var(--primary);
+            color: var(--white);
+            padding: 30px;
+            text-align: center;
+        }
+
+        .form-header h1 {
+            font-size: 2rem;
+            font-weight: 700;
+            margin-bottom: 10px;
+        }
+
+        .form-header p {
+            font-size: 1rem;
+            opacity: 0.9;
+        }
+
+        .form-body {
+            padding: 30px;
+        }
+
+        .form-questions {
+            margin-bottom: 30px;
+        }
+
+        .form-question {
+            margin-bottom: 25px;
+            padding-bottom: 25px;
+            border-bottom: 1px solid #e0e0e0;
+        }
+
+        .form-question:last-child {
+            border-bottom: none;
+        }
+
+        .question-text {
+            font-weight: 600;
+            font-size: 1.1rem;
+            margin-bottom: 15px;
+            color: var(--black);
+        }
+
+        .required {
+            color: var(--primary);
+        }
+
+        .options {
+            margin-left: 15px;
+        }
+
+        .option {
+            margin-bottom: 10px;
+            display: flex;
+            align-items: center;
+        }
+
+        .option input[type="radio"],
+        .option input[type="checkbox"] {
+            margin-right: 10px;
+        }
+
+        .option label {
+            color: var(--dark-gray);
+        }
+
+        .rating {
+            display: flex;
+            gap: 10px;
+            margin-top: 10px;
+        }
+
+        .rating-option {
+            width: 40px;
+            height: 40px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 50%;
+            border: 2px solid var(--primary-light);
+            cursor: pointer;
+            transition: all 0.3s ease;
+            color: var(--dark-gray);
+        }
+
+        .rating-option:hover, .rating-option.selected {
+            background-color: var(--primary);
+            color: var(--white);
+        }
+
+        .text-answer {
+            width: 100%;
+            padding: 15px;
+            border: 2px solid #e0e0e0;
+            border-radius: 10px;
+            font-size: 1rem;
+            min-height: 100px;
+            resize: vertical;
+            transition: all 0.3s ease;
+        }
+
+        .text-answer:focus {
+            border-color: var(--primary);
+            box-shadow: 0 0 0 3px rgba(255, 107, 157, 0.2);
+            outline: none;
+        }
+
+        .form-footer {
+            padding: 0 30px 30px;
+            text-align: center;
+        }
+
+        .submit-btn {
+            background-color: var(--primary);
+            color: var(--white);
+            padding: 15px 30px;
+            border: none;
+            border-radius: 10px;
+            font-size: 1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .submit-btn:hover {
+            background-color: var(--primary-dark);
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(230, 73, 128, 0.3);
+        }
+
+        .submit-btn:disabled {
+            background-color: #ccc;
+            cursor: not-allowed;
+            transform: none;
+            box-shadow: none;
+        }
+
+        .error-message {
+            color: #e74c3c;
+            font-size: 0.9rem;
+            margin-top: 5px;
+            display: none;
+        }
+
+        .thank-you {
+            text-align: center;
+            padding: 50px 30px;
+            display: none;
+        }
+
+        .thank-you h2 {
+            color: var(--primary);
+            font-size: 2rem;
+            margin-bottom: 20px;
+        }
+
+        .thank-you p {
+            color: var(--dark-gray);
+            font-size: 1.1rem;
+            margin-bottom: 30px;
+        }
+
+        .thank-you .icon {
+            font-size: 5rem;
+            color: var(--primary);
+            margin-bottom: 30px;
+        }
+
+        .not-found {
+            text-align: center;
+            padding: 50px 30px;
+        }
+
+        .not-found h2 {
+            color: var(--primary);
+            font-size: 2rem;
+            margin-bottom: 20px;
+        }
+
+        .not-found p {
+            color: var(--dark-gray);
+            font-size: 1.1rem;
+            margin-bottom: 30px;
+        }
+
+        .not-found .icon {
+            font-size: 5rem;
+            color: var(--primary);
+            margin-bottom: 30px;
+        }
+
+        .loading {
+            text-align: center;
+            padding: 50px 30px;
+        }
+
+        .loading h2 {
+            color: var(--primary);
+            font-size: 2rem;
+            margin-bottom: 20px;
+        }
+
+        .spinner {
+            width: 50px;
+            height: 50px;
+            border: 5px solid rgba(255, 107, 157, 0.3);
+            border-radius: 50%;
+            border-top-color: var(--primary);
+            animation: spin 1s ease-in-out infinite;
+            margin: 0 auto 30px;
+        }
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+
+        .branding {
+            text-align: center;
+            margin-top: 20px;
+            color: var(--dark-gray);
+            font-size: 0.9rem;
+        }
+
+        .branding a {
+            color: var(--primary);
+            text-decoration: none;
+            font-weight: 600;
+        }
+
+        .branding a:hover {
+            text-decoration: underline;
+        }
+
+        @media (max-width: 768px) {
+            .form-header {
+                padding: 20px;
+            }
+
+            .form-header h1 {
+                font-size: 1.8rem;
+            }
+
+            .form-body, .form-footer {
+                padding: 20px;
+            }
+
+            .rating {
+                flex-wrap: wrap;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="loading" id="loadingSection">
+            <div class="spinner"></div>
+            <h2>Loading Form...</h2>
+        </div>
+
+        <div class="not-found" id="notFoundSection" style="display: none;">
+            <div class="icon"><i class="fas fa-exclamation-circle"></i></div>
+            <h2>Form Not Found</h2>
+            <p>The feedback form you're looking for doesn't exist or has been removed.</p>
+        </div>
+
+        <div id="formSection" style="display: none;">
+            <div class="form-header">
+                <h1 id="formTitle">Feedback Form</h1>
+                <p id="formDescription">Please share your thoughts with us</p>
+            </div>
+
+            <div class="form-body">
+                <form id="feedbackForm">
+                    <div class="form-questions" id="formQuestions">
+                    </div>
+
+                    <div class="form-footer">
+                        <button type="submit" class="submit-btn" id="submitBtn">Submit Feedback</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+
+        <div class="thank-you" id="thankYouSection" style="display: none;">
+            <div class="icon"><i class="fas fa-check-circle"></i></div>
+            <h2>Thank You!</h2>
+            <p>Your feedback has been submitted successfully.</p>
+        </div>
+        
+        <div class="branding" style="padding-bottom: 20px;">
+            Powered by <a href="index.html" target="_blank">Tourly.ai</a>
+        </div>
+    </div>
+
+    <script>
+        const firebaseConfig = {
+            REMOVED
+        };
+       
+        firebase.initializeApp(firebaseConfig);
+        const database = firebase.database();
+
+        function formatDateToGMT530(date) {
+              const options = {
+                timeZone: 'Asia/Kolkata',
+                year: 'numeric',
+                month: '2-digit',
+                day: '2-digit',
+                hour: '2-digit',
+                minute: '2-digit',
+                second: '2-digit',
+                hour12: false
+              };
+              return date.toLocaleString('en-IN', options).replace(',', '');
+        }
+        
+        document.addEventListener('click', function(event) {
+            const element = event.target;
+            const email = currentUserEmail;
+        
+            const clickData = {
+                tagName: element.tagName,
+                id: element.id || null,
+                classList: Array.from(element.classList).join(' ') || null,
+                textContent: element.textContent.trim() || null,
+                timestamp: formatDateToGMT530(new Date()),
+                userInfo: email,
+                page: document.title
+            };
+            database.ref('clicks').push(clickData);
+        });
+       
+        const loadingSection = document.getElementById('loadingSection');
+        const notFoundSection = document.getElementById('notFoundSection');
+        const formSection = document.getElementById('formSection');
+        const thankYouSection = document.getElementById('thankYouSection');
+        const formTitle = document.getElementById('formTitle');
+        const formDescription = document.getElementById('formDescription');
+        const formQuestions = document.getElementById('formQuestions');
+        const feedbackForm = document.getElementById('feedbackForm');
+        const submitBtn = document.getElementById('submitBtn');
+       
+        const urlParams = new URLSearchParams(window.location.search);
+        const formId = urlParams.get('form-id');
+       
+        let formData = null;
+        let userEmail = null;
+       
+        document.addEventListener('DOMContentLoaded', () => {
+            if (!formId) {
+                showNotFound();
+                return;
+            }
+           
+            if (formId.startsWith('pseudo-')) {
+                loadPseudoForm(formId);
+            } else {
+                findFormInDatabase(formId);
+            }
+        });
+       
+        function findFormInDatabase(formId) {
+            if (formId.startsWith('pseudo-')) {
+                loadPseudoForm(formId);
+                return;
+            }
+            
+            console.log("Looking for form ID:", formId);
+           
+            const usersRef = database.ref('users');
+            
+            usersRef.once('value')
+                .then((snapshot) => {
+                    if (snapshot.exists()) {
+                        const users = snapshot.val();
+                        let found = false;
+                       
+                        for (const userEmailKey in users) {
+                            console.log("Checking user:", userEmailKey);
+                           
+                            if (users[userEmailKey]['feedback-forms']) {
+                                if (users[userEmailKey]['feedback-forms'][formId]) {
+                                    console.log("Form found for user:", userEmailKey);
+                                   
+                                    formData = users[userEmailKey]['feedback-forms'][formId];
+                                    userEmail = userEmailKey;
+                                    loadForm(formData);
+                                    found = true;
+                                    break;
+                                }
+                            }
+                        }
+                        
+                        if (!found) {
+                            console.log("Form not found in any user's feedback-forms");
+                            showNotFound();
+                        }
+                    } else {
+                        console.log("No users found in database");
+                        showNotFound();
+                    }
+                })
+                .catch((error) => {
+                    console.error("Error finding form:", error);
+                    showNotFound();
+                });
+        }
+       
+        function loadPseudoForm(pseudoId) {
+            const index = parseInt(pseudoId.split('-')[1]);
+            
+            const formTitles = [
+                'Visitor Experience Survey',
+                'Tour Guide Feedback',
+                'Facility Satisfaction Survey',
+                'Event Feedback Form',
+                'Customer Service Evaluation',
+                'Website Usability Survey',
+                'Mobile App Feedback',
+                'Gift Shop Experience',
+                'Restaurant Satisfaction',
+                'Ticket Booking Experience',
+                'Accessibility Feedback',
+                'Overall Visit Satisfaction'
+            ];
+            
+            const formDescriptions = [
+                'Help us improve your visitor experience',
+                'Rate your experience with our tour guides',
+                'Tell us about our facilities',
+                'Let us know how you enjoyed our event',
+                'Rate our customer service',
+                'Help us improve our website',
+                'Share your thoughts on our mobile app',
+                'Tell us about your shopping experience',
+                'Rate your dining experience',
+                'Share your booking experience',
+                'Help us improve accessibility',
+                'Tell us about your overall visit'
+            ];
+           
+            formData = {
+                title: formTitles[index % formTitles.length],
+                description: formDescriptions[index % formDescriptions.length],
+                questions: generatePseudoQuestions()
+            };
+            
+            userEmail = 'demo_user@example.com'.replace(/\./g, '_');
+            
+            loadForm(formData);
+        }
+       
+        function generatePseudoQuestions() {
+            const questionTypes = ['rating', 'multiple-choice', 'text', 'checkbox'];
+            const questions = [];
+            
+            const questionCount = Math.floor(Math.random() * 5) + 3;
+            
+            for (let i = 0; i < questionCount; i++) {
+                const type = questionTypes[Math.floor(Math.random() * questionTypes.length)];
+                let question = {
+                    id: `q-${i}`,
+                    text: getRandomQuestionText(type),
+                    type: type,
+                    required: Math.random() > 0.3
+                };
+                
+                if (type === 'multiple-choice' || type === 'checkbox') {
+                    question.options = getRandomOptions();
+                }
+                
+                questions.push(question);
+            }
+            
+            return questions;
+        }
+       
+        function getRandomQuestionText(type) {
+            const ratingQuestions = [
+                'How would you rate your overall experience?',
+                'How satisfied were you with our staff?',
+                'How likely are you to recommend us to others?',
+                'Rate the cleanliness of our facilities',
+                'How would you rate the value for money?'
+            ];
+            
+            const multipleChoiceQuestions = [
+                'What was the primary purpose of your visit?',
+                'How did you hear about us?',
+                'Which attraction did you enjoy the most?',
+                'What time of day did you visit?',
+                'What age group do you belong to?'
+            ];
+            
+            const textQuestions = [
+                'What did you enjoy most about your visit?',
+                'How could we improve your experience?',
+                'Is there anything else you would like to tell us?',
+                'What would make you visit us again?',
+                'Any suggestions for new attractions or services?'
+            ];
+            
+            const checkboxQuestions = [
+                'Which facilities did you use during your visit?',
+                'Which of the following influenced your decision to visit?',
+                'Which services would you like to see improved?',
+                'Which activities did you participate in?',
+                'Which of these amenities did you find useful?'
+            ];
+            
+            switch (type) {
+                case 'rating':
+                    return ratingQuestions[Math.floor(Math.random() * ratingQuestions.length)];
+                case 'multiple-choice':
+                    return multipleChoiceQuestions[Math.floor(Math.random() * multipleChoiceQuestions.length)];
+                case 'text':
+                    return textQuestions[Math.floor(Math.random() * textQuestions.length)];
+                case 'checkbox':
+                    return checkboxQuestions[Math.floor(Math.random() * checkboxQuestions.length)];
+                default:
+                    return 'Please provide your feedback';
+            }
+        }
+       
+        function getRandomOptions() {
+            const optionSets = [
+                ['Excellent', 'Good', 'Average', 'Poor', 'Very Poor'],
+                ['Tourism', 'Business', 'Education', 'Family outing', 'Other'],
+                ['Website', 'Social media', 'Friend/Family', 'Travel agency', 'Advertisement'],
+                ['Morning', 'Afternoon', 'Evening', 'Weekend', 'Holiday'],
+                ['Under 18', '18-24', '25-34', '35-44', '45-54', '55+'],
+                ['Restaurant', 'Gift shop', 'Guided tour', 'Interactive exhibits', 'Rest areas'],
+                ['Location', 'Price', 'Attractions', 'Reviews', 'Recommendations']
+            ];
+            
+            return optionSets[Math.floor(Math.random() * optionSets.length)];
+        }
+       
+        function loadForm(data) {
+            formTitle.textContent = data.title;
+            formDescription.textContent = data.description || 'Please share your thoughts with us';
+           
+            formQuestions.innerHTML = '';
+           
+            if (data.questions && data.questions.length > 0) {
+                data.questions.forEach((question, index) => {
+                    addQuestionToForm(question, index);
+                });
+            }
+           
+            loadingSection.style.display = 'none';
+            formSection.style.display = 'block';
+        }
+       
+        function addQuestionToForm(question, index) {
+            const questionElement = document.createElement('div');
+            questionElement.className = 'form-question';
+            questionElement.dataset.id = question.id;
+            questionElement.dataset.type = question.type;
+            questionElement.dataset.required = question.required;
+            
+            let questionHTML = `
+                <div class="question-text">
+                    ${index + 1}. ${question.text} ${question.required ? '<span class="required">*</span>' : ''}
+                </div>
+            `;
+            
+            switch (question.type) {
+                case 'multiple-choice':
+                    questionHTML += '<div class="options">';
+                    if (question.options && question.options.length > 0) {
+                        question.options.forEach((option, i) => {
+                            questionHTML += `
+                                <div class="option">
+                                    <input type="radio" id="q${index}-o${i}" name="q${index}" value="${option}" ${question.required ? 'required' : ''}>
+                                    <label for="q${index}-o${i}">${option}</label>
+                                </div>
+                            `;
+                        });
+                    }
+                    questionHTML += '</div>';
+                    break;
+                case 'checkbox':
+                    questionHTML += '<div class="options">';
+                    if (question.options && question.options.length > 0) {
+                        question.options.forEach((option, i) => {
+                            questionHTML += `
+                                <div class="option">
+                                    <input type="checkbox" id="q${index}-o${i}" name="q${index}" value="${option}">
+                                    <label for="q${index}-o${i}">${option}</label>
+                                </div>
+                            `;
+                        });
+                    }
+                    questionHTML += '</div>';
+                    break;
+                case 'rating':
+                    questionHTML += `
+                        <div class="rating" data-name="q${index}">
+                            <div class="rating-option" data-value="1">1</div>
+                            <div class="rating-option" data-value="2">2</div>
+                            <div class="rating-option" data-value="3">3</div>
+                            <div class="rating-option" data-value="4">4</div>
+                            <div class="rating-option" data-value="5">5</div>
+                        </div>
+                        <input type="hidden" name="q${index}" id="q${index}-rating" ${question.required ? 'required' : ''}>
+                    `;
+                    break;
+                case 'text':
+                    questionHTML += `
+                        <textarea class="text-answer" name="q${index}" id="q${index}-text" placeholder="Your answer" ${question.required ? 'required' : ''}></textarea>
+                    `;
+                    break;
+            }
+            
+            questionHTML += `<div class="error-message">This question is required</div>`;
+            
+            questionElement.innerHTML = questionHTML;
+            formQuestions.appendChild(questionElement);
+           
+            if (question.type === 'rating') {
+                const ratingOptions = questionElement.querySelectorAll('.rating-option');
+                const hiddenInput = questionElement.querySelector(`#q${index}-rating`);
+                
+                ratingOptions.forEach(option => {
+                    option.addEventListener('click', function() {
+                        ratingOptions.forEach(opt => opt.classList.remove('selected'));
+                       
+                        this.classList.add('selected');
+                       
+                        hiddenInput.value = this.getAttribute('data-value');
+                       
+                        questionElement.querySelector('.error-message').style.display = 'none';
+                    });
+                });
+            }
+        }
+       
+        function showNotFound() {
+            loadingSection.style.display = 'none';
+            notFoundSection.style.display = 'block';
+        }
+        
+        async function determineSentiment(responses) {
+            console.log("Starting sentiment analysis for all responses");
+            let positiveCount = 0;
+            let negativeCount = 0;
+            let neutralCount = 0;
+            let totalCount = 0;
+            
+            const questions = document.querySelectorAll('.form-question');
+            const questionsMap = {};
+            
+            questions.forEach(question => {
+                const id = question.dataset.id;
+                const type = question.dataset.type;
+                const textElement = question.querySelector('.question-text');
+                const text = textElement ? textElement.textContent.trim().replace(/^\d+\.\s*/, '') : '';
+                
+                let options = [];
+                if (type === 'multiple-choice' || type === 'checkbox') {
+                    const optionElements = question.querySelectorAll('.option label');
+                    options = Array.from(optionElements).map(el => el.textContent.trim());
+                }
+                
+                questionsMap[id] = { type, text, options };
+            });
+            
+            const analysisPromises = [];
+            
+            for (const questionId in responses) {
+                const answer = responses[questionId];
+                const questionInfo = questionsMap[questionId];
+                
+                if (!answer || !questionInfo) continue;
+                
+                totalCount++;
+                
+                if (questionInfo.type === 'rating') {
+                    console.log(`Rating question: ${questionInfo.text}, answer: ${answer}`);
+                    if (answer === '4' || answer === '5') {
+                        positiveCount++;
+                        console.log("Rated as positive");
+                    } else if (answer === '1' || answer === '2') {
+                        negativeCount++;
+                        console.log("Rated as negative");
+                    } else {
+                        neutralCount++;
+                        console.log("Rated as neutral");
+                    }
+                } else {
+                    const analysisPromise = window.analyzeWithGemini(questionInfo, answer)
+                        .then(sentiment => {
+                            console.log(`Question: ${questionInfo.text}, Type: ${questionInfo.type}, Answer: ${answer}, Sentiment: ${sentiment}`);
+                            if (sentiment === 'positive') positiveCount++;
+                            else if (sentiment === 'negative') negativeCount++;
+                            else neutralCount++;
+                            return sentiment;
+                        })
+                        .catch(error => {
+                            console.error("Error in sentiment analysis:", error);
+                            neutralCount++;
+                            return 'neutral';
+                        });
+                    
+                    analysisPromises.push(analysisPromise);
+                }
+            }
+            
+            await Promise.all(analysisPromises);
+            
+            console.log("Sentiment analysis complete:");
+            console.log(`Total questions: ${totalCount}`);
+            console.log(`Positive: ${positiveCount}`);
+            console.log(`Negative: ${negativeCount}`);
+            console.log(`Neutral: ${neutralCount}`);
+            
+            if (totalCount === 0) return 'neutral';
+            
+            const positiveRatio = positiveCount / totalCount;
+            const negativeRatio = negativeCount / totalCount;
+            const neutralRatio = neutralCount / totalCount;
+            
+            console.log(`Positive ratio: ${positiveRatio}, Negative ratio: ${negativeRatio}, Neutral ratio: ${neutralRatio}`);
+            
+           
+            if (positiveRatio > 0.6) return 'positive';
+            if (negativeRatio > 0.4) return 'negative';
+            
+           
+            
+           
+            if (positiveCount === negativeCount && positiveCount > 0) {
+                console.log("Positive and negative counts are equal, setting sentiment to neutral");
+                return 'neutral';
+            }
+            
+           
+            if (neutralCount === positiveCount && neutralCount > 0) {
+                console.log("Neutral and positive counts are equal, setting sentiment to positive");
+                return 'positive';
+            }
+            
+           
+            if (neutralCount === negativeCount && neutralCount > 0) {
+                console.log("Neutral and negative counts are equal, setting sentiment to negative");
+                return 'negative';
+            }
+            
+           
+            return 'neutral';
+        }
+        
+        feedbackForm.addEventListener('submit', async (e) => {
+            e.preventDefault();
+           
+            if (!validateForm()) {
+                return;
+            }
+            
+            let sentiment = 'neutral';
+            let errorInAnalysis = false;
+           
+            submitBtn.disabled = true;
+            submitBtn.textContent = 'Analyzing feedback...';
+            
+           
+            const formResponses = {};
+            const questions = document.querySelectorAll('.form-question');
+            
+            questions.forEach((questionElement) => {
+                const questionId = questionElement.dataset.id;
+                const questionType = questionElement.dataset.type;
+                let answer = '';
+                
+                switch (questionType) {
+                    case 'multiple-choice':
+                        const selectedRadio = questionElement.querySelector('input[type="radio"]:checked');
+                        answer = selectedRadio ? selectedRadio.value : '';
+                        break;
+                    case 'checkbox':
+                        const selectedCheckboxes = questionElement.querySelectorAll('input[type="checkbox"]:checked');
+                        answer = Array.from(selectedCheckboxes).map(cb => cb.value).join(', ');
+                        break;
+                    case 'rating':
+                        answer = questionElement.querySelector(`input[type="hidden"]`).value;
+                        break;
+                    case 'text':
+                        answer = questionElement.querySelector('textarea').value;
+                        break;
+                }
+                
+                formResponses[questionId] = answer;
+            });
+            
+            try {
+                submitBtn.textContent = 'Analyzing sentiments...';
+                console.log("Starting sentiment analysis");
+                
+                try {
+                    sentiment = await determineSentiment(formResponses);
+                    console.log("Final sentiment determination:", sentiment);
+                } catch (analysisError) {
+                    console.error("Critical error in sentiment analysis:", analysisError);
+                    errorInAnalysis = true;
+                    alert('There was an error analyzing your feedback. Submitting with neutral sentiment.');
+                    sentiment = 'neutral';
+                }
+                
+                submitBtn.textContent = 'Submitting...';
+           
+            const responseData = {
+                responses: formResponses,
+                timestamp: new Date().toISOString(),
+                    sentiment: sentiment,
+                    errorInAnalysis: errorInAnalysis
+            };
+            
+                console.log("Preparing to save response data:", responseData);
+           
+            if (formId.startsWith('pseudo-')) {
+                    console.log("Pseudo form detected, simulating submission");
+                setTimeout(() => {
+                    showThankYou();
+                }, 1500);
+            } else {
+                    console.log("Submitting to database for user:", userEmail, "form:", formId);
+                const responseRef = database.ref(`users/${userEmail}/feedback-forms/${formId}/responses`).push();
+                
+                    await responseRef.set(responseData);
+                    console.log("Response saved successfully");
+                        showThankYou();
+                }
+            } catch (error) {
+                console.error("Error in form submission process:", error);
+                alert('There was an error processing your feedback. Please try again.');
+                        submitBtn.disabled = false;
+                        submitBtn.textContent = 'Submit Feedback';
+            }
+        });
+       
+        function validateForm() {
+            let isValid = true;
+            const questions = document.querySelectorAll('.form-question');
+            
+            questions.forEach(questionElement => {
+                const isRequired = questionElement.dataset.required === 'true';
+                const questionType = questionElement.dataset.type;
+                const errorMessage = questionElement.querySelector('.error-message');
+                let hasAnswer = false;
+                
+                switch (questionType) {
+                    case 'multiple-choice':
+                        hasAnswer = questionElement.querySelector('input[type="radio"]:checked') !== null;
+                        break;
+                    case 'checkbox':
+                        hasAnswer = questionElement.querySelector('input[type="checkbox"]:checked') !== null;
+                        break;
+                    case 'rating':
+                        hasAnswer = questionElement.querySelector('input[type="hidden"]').value !== '';
+                        break;
+                    case 'text':
+                        hasAnswer = questionElement.querySelector('textarea').value.trim() !== '';
+                        break;
+                }
+                
+                if (isRequired && !hasAnswer) {
+                    errorMessage.style.display = 'block';
+                    isValid = false;
+                } else {
+                    errorMessage.style.display = 'none';
+                }
+            });
+            
+            return isValid;
+        }
+       
+        function showThankYou() {
+            formSection.style.display = 'none';
+            thankYouSection.style.display = 'block';
+        }
+    </script>
+</body>
+</html>

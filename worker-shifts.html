@@ -1,0 +1,1809 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Tourly.ai - Smart Tourist Site Management Platform</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="icon" type="image/x-icon" href="other_assets/Tourly.ai Logo.png">
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-auth-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-database-compat.js"></script>
+    <style>
+        :root {
+            --primary: #ff6b9d;
+            --primary-light: #ff8fb3;
+            --primary-dark: #e64980;
+            --black: #1a1a1a;
+            --white: #ffffff;
+            --gray: #f5f5f5;
+            --dark-gray: #333333;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Poppins', sans-serif;
+        }
+
+        body {
+            background-color: var(--gray);
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            overflow-x: hidden;
+        }
+
+        .container {
+            width: 100%;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            background-color: var(--white);
+            transition: all 0.5s ease;
+        }
+
+        
+        .auth-container {
+            width: 100%;
+            max-width: 420px;
+            padding: 40px;
+            border-radius: 20px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+            background-color: var(--white);
+            text-align: center;
+            transition: transform 0.5s ease, opacity 0.5s ease;
+        }
+
+        .auth-container.hidden {
+            display: none !important;
+            opacity: 0;
+            transform: translateY(20px);
+            position: absolute;
+        }
+
+        .auth-container h1 {
+            color: var(--primary);
+            margin-bottom: 30px;
+            font-size: 2.5rem;
+            font-weight: 700;
+        }
+
+        .auth-container p {
+            color: var(--dark-gray);
+            margin-bottom: 30px;
+            font-size: 1rem;
+        }
+
+        .auth-container .logo {
+            font-size: 3rem;
+            margin-bottom: 20px;
+            color: var(--primary);
+        }
+
+        .input-group {
+            margin-bottom: 20px;
+            position: relative;
+        }
+
+        .input-group input {
+            width: 100%;
+            padding: 15px 20px;
+            border: 2px solid #e0e0e0;
+            border-radius: 10px;
+            font-size: 1rem;
+            transition: all 0.3s ease;
+            outline: none;
+        }
+
+        .input-group input:focus {
+            border-color: var(--primary);
+            box-shadow: 0 0 0 3px rgba(255, 107, 157, 0.2);
+        }
+
+        .btn {
+            width: 100%;
+            padding: 15px;
+            border: none;
+            border-radius: 10px;
+            background-color: var(--primary);
+            color: var(--white);
+            font-size: 1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            margin-bottom: 20px;
+        }
+
+        .btn:hover {
+            background-color: var(--primary-dark);
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(230, 73, 128, 0.3);
+        }
+
+        .google-btn {
+            background-color: var(--white);
+            color: var(--black);
+            border: 2px solid #e0e0e0;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+        }
+
+        .google-btn:hover {
+            background-color: #f5f5f5;
+            color: var(--black);
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+        }
+
+        .auth-switch {
+            color: var(--dark-gray);
+            margin-top: 20px;
+        }
+
+        .auth-switch a {
+            color: var(--primary);
+            text-decoration: none;
+            font-weight: 600;
+            cursor: pointer;
+        }
+
+        .auth-switch a:hover {
+            text-decoration: underline;
+        }
+
+        
+        .dashboard {
+            width: 100%;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            background-color: var(--gray);
+            transition: all 0.5s ease;
+        }
+
+        .dashboard.active {
+            display: flex;
+        }
+
+        .sidebar {
+            width: 280px;
+            height: 100vh;
+            background-color: var(--white);
+            position: fixed;
+            left: 0;
+            top: 0;
+            padding: 30px 20px;
+            box-shadow: 0 0 20px rgba(0, 0, 0, 0.05);
+            z-index: 100;
+            transition: all 0.3s ease;
+        }
+
+        .sidebar-header {
+            display: flex;
+            align-items: center;
+            margin-bottom: 20px;
+            position: relative;
+            padding-bottom: 20px;
+        }
+
+        .sidebar-header h1 {
+            color: var(--primary);
+            font-size: 2rem;
+            font-weight: 700;
+            margin-left: 10px;
+        }
+
+        .sidebar-header:after {
+            content: '';
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            width: 100%;
+            height: 1px;
+            background-color: rgba(0, 0, 0, 0.1);
+        }
+
+        .sidebar-menu {
+            list-style: none;
+        }
+
+        .sidebar-menu li {
+            margin-bottom: 10px;
+        }
+
+        .sidebar-menu a {
+            display: flex;
+            align-items: center;
+            padding: 15px;
+            border-radius: 10px;
+            color: var(--dark-gray);
+            text-decoration: none;
+            transition: all 0.3s ease;
+            font-weight: 500;
+        }
+
+        .sidebar-menu a i {
+            margin-right: 15px;
+            font-size: 1.2rem;
+        }
+
+        .sidebar-menu a.active, .sidebar-menu a:hover {
+            background-color: var(--primary);
+            color: var(--white);
+        }
+
+        .main-content {
+            margin-left: 280px;
+            padding: 30px;
+            width: calc(100% - 280px);
+            transition: all 0.3s ease;
+        }
+
+        .header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 30px;
+        }
+
+        .header h1 {
+            color: var(--black);
+            font-size: 2rem;
+            font-weight: 700;
+        }
+
+        .user-profile {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            cursor: pointer;
+            position: relative;
+        }
+
+        .user-profile img {
+            width: 45px;
+            height: 45px;
+            border-radius: 50%;
+            object-fit: cover;
+        }
+
+        .user-profile .user-info {
+            display: flex;
+            flex-direction: column;
+        }
+
+        .user-profile .user-name {
+            font-weight: 600;
+            color: var(--black);
+        }
+
+        .user-profile .user-role {
+            font-size: 0.8rem;
+            color: var(--dark-gray);
+        }
+
+        .dropdown-menu {
+            position: absolute;
+            top: 60px;
+            right: 0;
+            background-color: var(--white);
+            border-radius: 10px;
+            box-shadow: 0 5px 20px rgba(0, 0, 0, 0.1);
+            padding: 15px;
+            min-width: 180px;
+            display: none;
+            z-index: 100;
+        }
+
+        .dropdown-menu.active {
+            display: block;
+            animation: fadeIn 0.3s ease;
+        }
+
+        .dropdown-menu a {
+            display: flex;
+            align-items: center;
+            padding: 10px;
+            color: var(--dark-gray);
+            text-decoration: none;
+            transition: all 0.3s ease;
+            border-radius: 5px;
+        }
+
+        .dropdown-menu a i {
+            margin-right: 10px;
+        }
+
+        .dropdown-menu a:hover {
+            background-color: var(--gray);
+        }
+
+        .dropdown-menu .logout {
+            color: #e74c3c;
+        }
+
+        
+        .worker-shifts {
+            background-color: #fff;
+            border-radius: 15px;
+            padding: 25px;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.05);
+            margin-bottom: 30px;
+        }
+
+        .section-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 25px;
+        }
+
+        .section-header h2 {
+            color: var(--black);
+            font-size: 1.5rem;
+            font-weight: 600;
+        }
+
+        .section-header .btn {
+            width: auto;
+            padding: 10px 20px;
+            margin-bottom: 0;
+        }
+
+        
+        .worker-shifts-grid {
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+            margin-top: 20px;
+        }
+
+        .worker-shift-card {
+            background-color: #fff;
+            border-radius: 12px;
+            padding: 25px;
+            box-shadow: 0 3px 10px rgba(0, 0, 0, 0.08);
+            transition: all 0.3s ease;
+            border: 1.2px solid #1a1a1a !important;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            border-color: var(--primary);
+            cursor: pointer;
+        }
+
+        .worker-shift-card:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 8px 15px rgba(0, 0, 0, 0.1);
+        }
+
+        .worker-info {
+            display: flex;
+            align-items: center;
+            gap: 20px;
+            flex: 1;
+        }
+
+        .worker-avatar {
+            width: 60px;
+            height: 60px;
+            border-radius: 50%;
+            background-color: rgba(255, 107, 157, 0.1);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: var(--primary);
+            font-size: 1.8rem;
+            flex-shrink: 0;
+        }
+
+        .worker-details {
+            flex: 1;
+        }
+
+        .worker-type {
+            font-weight: 600;
+            color: var(--primary);
+            font-size: 1.3rem;
+            margin-bottom: 8px;
+        }
+
+        .worker-name {
+            font-weight: 500;
+            color: var(--black);
+            font-size: 1.2rem;
+            margin-bottom: 12px;
+        }
+
+        .shift-times {
+            display: flex;
+            gap: 20px;
+            flex-wrap: wrap;
+        }
+
+        .shift-time {
+            display: flex;
+            align-items: center;
+            color: var(--dark-gray);
+            font-size: 1.05rem;
+            margin-bottom: 5px;
+        }
+
+        .shift-time i {
+            margin-right: 10px;
+            color: var(--primary-light);
+            font-size: 1.1rem;
+        }
+
+        .card-actions {
+            display: flex;
+            gap: 10px;
+        }
+
+        .action-btn {
+            padding: 8px 12px;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .edit-btn {
+            background-color: #ff6b9d;
+            color: white;
+        }
+
+        .edit-btn:hover {
+            background-color: #f40f5b;
+        }
+
+        .delete-btn {
+            background-color: #ff6b9d;
+            color: white;
+        }
+
+        .delete-btn:hover {
+            background-color: #f40f5b;
+        }
+
+        
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.5);
+            z-index: 1000;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .modal.active {
+            display: flex;
+        }
+
+        .modal-content {
+            background-color: var(--white);
+            border-radius: 15px;
+            padding: 30px;
+            width: 90%;
+            max-width: 500px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+        }
+
+        .modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+        }
+
+        .modal-header h3 {
+            color: var(--primary);
+            font-size: 1.5rem;
+            font-weight: 600;
+        }
+
+        .close-btn {
+            background: none;
+            border: none;
+            font-size: 1.5rem;
+            cursor: pointer;
+            color: var(--dark-gray);
+        }
+
+        .modal-body {
+            margin-bottom: 20px;
+        }
+
+        .modal-footer {
+            display: flex;
+            justify-content: flex-end;
+            gap: 10px;
+        }
+
+        .modal-footer .btn {
+            width: auto;
+            padding: 10px 20px;
+            margin-bottom: 0;
+        }
+
+        .cancel-btn {
+            background-color: var(--gray);
+            color: var(--dark-gray);
+        }
+
+        .cancel-btn:hover {
+            background-color: #e0e0e0;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+        }
+
+        
+        .toast {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            background-color: var(--primary);
+            color: white;
+            padding: 15px 25px;
+            border-radius: 10px;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
+            z-index: 1000;
+            transform: translateY(100px);
+            opacity: 0;
+            transition: all 0.3s ease;
+        }
+        
+        .toast.show {
+            transform: translateY(0);
+            opacity: 1;
+        }
+        
+        
+        .loading-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.7);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            z-index: 2000;
+            opacity: 0;
+            visibility: hidden;
+            transition: all 0.3s ease;
+        }
+        
+        .loading-overlay.show {
+            opacity: 1;
+            visibility: visible;
+        }
+        
+        .spinner {
+            width: 50px;
+            height: 50px;
+            border: 5px solid rgba(255, 255, 255, 0.3);
+            border-radius: 50%;
+            border-top-color: var(--primary);
+            animation: spin 1s ease-in-out infinite;
+        }
+
+        
+        .dashboard-cards {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+            gap: 25px;
+            margin-bottom: 30px;
+            cursor: pointer;
+        }
+
+        .card {
+            background-color: var(--white);
+            border-radius: 15px;
+            padding: 25px;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.05);
+            transition: all 0.3s ease;
+        }
+
+        .card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 10px 20px rgba(0, 0, 0, 0.1);
+        }
+
+        .card-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+        }
+
+        .card-header h3 {
+            color: var(--black);
+            font-size: 1.2rem;
+            font-weight: 600;
+        }
+
+        .card-header .icon {
+            width: 50px;
+            height: 50px;
+            border-radius: 12px;
+            background-color: rgba(255, 107, 157, 0.1);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: var(--primary);
+            font-size: 1.5rem;
+        }
+
+        .card-value {
+            font-size: 2.5rem;
+            font-weight: 700;
+            color: var(--black);
+            margin-bottom: 10px;
+        }
+
+        .card-label {
+            color: var(--dark-gray);
+            font-size: 0.9rem;
+        }
+        
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+        
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+                transform: translateY(10px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        @media (max-width: 1024px) {
+            .sidebar {
+                width: 80px;
+                padding: 20px 10px;
+            }
+
+            .sidebar-header h1, .sidebar-menu a span {
+                display: none;
+            }
+
+            .sidebar-menu a i {
+                margin-right: 0;
+                font-size: 1.5rem;
+            }
+
+            .main-content {
+                margin-left: 80px;
+                width: calc(100% - 80px);
+            }
+        }
+
+        @media (max-width: 768px) {
+            .header {
+                flex-direction: column;
+                align-items: flex-start;
+                gap: 15px;
+            }
+
+            .user-profile {
+                align-self: flex-end;
+            }
+            
+            .worker-shift-card {
+                flex-direction: column;
+                align-items: flex-start;
+            }
+            
+            .worker-info {
+                margin-bottom: 15px;
+                width: 100%;
+            }
+            
+            .card-actions {
+                align-self: flex-end;
+            }
+        }
+
+        @media (max-width: 480px) {
+            .main-content {
+                padding: 20px 15px;
+            }
+            
+            .section-header {
+                flex-direction: column;
+                align-items: flex-start;
+                gap: 15px;
+            }
+            
+            .section-header .btn {
+                width: 100%;
+            }
+            
+            .modal-content {
+                width: 95%;
+                padding: 20px;
+            }
+        }
+    </style>
+</head>
+<body>
+    
+    <div class="auth-container hidden" id="loginContainer">
+        <div onclick="window.open('app.html', '_self');" style="cursor: pointer;">
+        <div class="logo"><i class="fas fa-torii-gate"></i></div>
+        <h1>Tourly.ai</h1>
+        </div>
+        <p>Smart Tourist Site Management Platform</p>
+        
+        <div class="input-group">
+            <input type="email" id="loginEmail" placeholder="Email Address">
+        </div>
+        <div class="input-group">
+            <input type="password" id="loginPassword" placeholder="Password">
+        </div>
+        
+        <button class="btn" id="loginBtn">Log In</button>
+        <button class="btn google-btn" id="googleLoginBtn">
+            <i class="fab fa-google"></i> Continue with Google
+        </button>
+        
+        <div class="auth-switch">
+            Don't have an account? <a id="showSignup">Sign Up</a>
+        </div>
+    </div>
+    
+    <div class="auth-container hidden" id="signupContainer">
+        <div onclick="window.open('app.html', '_self');" style="cursor: pointer;">
+        <div class="logo"><i class="fas fa-torii-gate"></i></div>
+        <h1>Tourly.ai</h1>
+        </div>
+        <p>Create your account</p>
+        
+        <div class="input-group">
+            <input type="text" id="signupName" placeholder="Full Name">
+        </div>
+        <div class="input-group">
+            <input type="email" id="signupEmail" placeholder="Email Address">
+        </div>
+        <div class="input-group">
+            <input type="password" id="signupPassword" placeholder="Password">
+        </div>
+        
+        <button class="btn" id="signupBtn">Sign Up</button>
+        <button class="btn google-btn" id="googleSignupBtn">
+            <i class="fab fa-google"></i> Continue with Google
+        </button>
+        
+        <div class="auth-switch">
+            Already have an account? <a id="showLogin">Log In</a>
+        </div>
+    </div>
+    
+    
+    <div class="dashboard active" id="dashboard">
+        
+        <div class="sidebar">
+            <div onclick="window.location.href='app.html'" style="cursor: pointer;">
+            <div class="sidebar-header">
+                <i class="fas fa-torii-gate" style="color: var(--primary); font-size: 2.5rem;"></i>
+                <h1>Tourly.ai</h1>
+            </div>
+            </div>
+            
+            <ul class="sidebar-menu">
+                <li>
+                    <a href="app.html">
+                        <i class="fas fa-users"></i>
+                        <span>Manage Crowd</span>
+                    </a>
+                </li>
+                <li>
+                    <a href="app.html?page=pricing">
+                        <i class="fas fa-wallet"></i>
+                        <span>Dynamic Pricing</span>
+                    </a>
+                </li>
+                <li>
+                    <a href="app.html?page=tickets">
+                        <i class="fas fa-receipt"></i>
+                        <span>Manage Tickets</span>
+                    </a>
+                </li>
+                <li>
+                    <a href="manage-costs.html">
+                        <i class="fas fa-chart-line"></i>
+                        <span>Manage Costs</span>
+                    </a>
+                </li>
+                <li>
+                    <a href="worker-shifts.html" class="active">
+                        <i class="fas fa-calendar-alt"></i>
+                        <span>Worker Shifts</span>
+                    </a>
+                </li>
+                <li>
+                    <a href="feedbacks-ai.html">
+                        <i class="fas fa-comment-alt"></i>
+                        <span>Feedbacks AI</span>
+                    </a>
+                </li>
+                <li>
+                    <a href="#">
+                        <i class="fas fa-user"></i>
+                        <span>Profile</span>
+                    </a>
+                </li>
+                <li>
+                    <a href="#">
+                        <i class="fas fa-cog"></i>
+                        <span>Settings</span>
+                    </a>
+                </li>
+            </ul>
+            <div class="sidebar-logout">
+                <a href="#" id="sidebarLogoutBtn">
+                    <i class="fas fa-sign-out-alt"></i>
+                    <span>Logout</span>
+                </a>
+            </div>
+            <style>
+                
+                .sidebar-logout {
+    position: absolute;
+    bottom: 30px;
+    left: 0;
+    width: 100%;
+    padding: 0 20px;
+    border-top: 1px solid rgba(0, 0, 0, 0.1);
+    padding-top: 20px;
+    margin-top: 20px;
+}
+
+.sidebar-logout a {
+    display: flex;
+    align-items: center;
+    padding: 15px;
+    border-radius: 10px;
+    color: #e74c3c;
+    text-decoration: none;
+    transition: all 0.3s ease;
+    font-weight: 500;
+    border: 1.5px solid rgb(231, 76, 60, 0.5);
+}
+
+.sidebar-logout a i {
+    margin-right: 15px;
+    font-size: 1.2rem;
+    color: #e74c3c;
+}
+
+.sidebar-logout a:hover {
+    background-color: #e74c3c;
+    color: var(--white);
+    box-shadow: 0 5px 15px rgba(231, 76, 60, 0.3);
+}
+
+.sidebar-logout a:hover i {
+    color: var(--white);
+}
+
+@media (max-width: 1024px) {
+    .sidebar-logout {
+        padding: 0 10px;
+        padding-top: 20px;
+    }
+    
+    .sidebar-logout a span {
+        display: none;
+    }
+    
+    .sidebar-logout a i {
+        margin-right: 0;
+        font-size: 1.5rem;
+    }
+}
+
+
+            </style>
+        </div>
+        
+        <script>
+            const sidebarLogoutBtn = document.getElementById('sidebarLogoutBtn');
+            sidebarLogoutBtn.addEventListener('click', (e) => {
+            e.preventDefault();
+            showLoading();
+            auth.signOut()
+                .then(() => {
+                    hideLoading();
+                    window.location.href = 'app.html';
+                })
+                .catch(error => {
+                    hideLoading();
+                    showToast('Error logging out: ' + error.message);
+                });
+        });
+        </script>
+
+        
+        <div class="main-content">
+            <div class="header">
+                <h1>Worker Shifts Management</h1>
+                
+                <div class="user-profile" id="userProfileBtn">
+                    <img src="https://ui-avatars.com/api/?name=John+Doe&background=ff6b9d&color=fff" alt="User Profile" id="userProfileImg">
+                    <div class="user-info">
+                        <div class="user-name" id="userName">John Doe</div>
+                        <div class="user-role">Administrator</div>
+                    </div>
+                    <i class="fas fa-chevron-down" style="margin-left: 10px; font-size: 0.8rem;"></i>
+                    
+                    <div class="dropdown-menu" id="userDropdown">
+                        <a href="#" id="profileLink"><i class="fas fa-user"></i> Profile</a>
+                        <a href="#" id="settingsLink"><i class="fas fa-cog"></i> Settings</a>
+                        <a href="#" class="logout" id="logoutBtn"><i class="fas fa-sign-out-alt"></i> Logout</a>
+                    </div>
+                </div>
+            </div>
+            
+            
+            <div class="dashboard-cards">
+                <div class="card">
+                    <div class="card-header">
+                        <h3>Total Workers</h3>
+                        <div class="icon">
+                            <i class="fas fa-tools"></i>
+                        </div>
+                    </div>
+                    <div class="card-value">86</div>
+                    <div class="card-label">Total hired workers</div>
+                </div>
+                
+                <div class="card">
+                    <div class="card-header">
+                        <h3>Today's Shifts</h3>
+                        <div class="icon">
+                            <i class="fas fa-calendar-day"></i>
+                        </div>
+                    </div>
+                    <div class="card-value">12</div>
+                    <div class="card-label">Shifts scheduled today</div>
+                </div>
+                
+                <div class="card">
+                    <div class="card-header">
+                        <h3>Coverage Rate</h3>
+                        <div class="icon">
+                            <i class="fas fa-percentage"></i>
+                        </div>
+                    </div>
+                    <div class="card-value">92%</div>
+                    <div class="card-label">Of required positions filled</div>
+                </div>
+            </div>
+            
+            <div class="worker-shifts">
+                <div class="section-header">
+                    <h2>Worker Shifts</h2>
+                    <button class="btn" id="addWorkerBtn">
+                        <i class="fas fa-plus" style="margin-right: 5px;"></i> Add New Worker Shift
+                    </button>
+                </div>
+                
+                <div class="worker-shifts-grid" id="workerShiftsGrid">
+                    
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    
+    <div class="modal" id="workerShiftModal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3 id="modalTitle">Add Worker Shift</h3>
+                <button class="close-btn" id="closeModal">&times;</button>
+            </div>
+            <div class="modal-body">
+                <form id="workerShiftForm">
+                    <input type="hidden" id="shiftId">
+                    <div class="input-group">
+                        <select style="width: 100%; padding: 15px 20px; border: 2px solid #e0e0e0; border-radius: 10px; font-size: 1rem;" id="workerType" required>
+                            <option value="" disabled selected>Select Worker Type</option>
+                            <option value="Electrician">Electrician</option>
+                            <option value="Plumber">Plumber</option>
+                            <option value="Carpenter">Carpenter</option>
+                            <option value="Painter">Painter</option>
+                            <option value="HVAC Technician">HVAC Technician</option>
+                            <option value="Janitor">Janitor</option>
+                            <option value="Security Guard">Security Guard</option>
+                            <option value="Maintenance">Maintenance</option>
+                        </select>
+                    </div>
+                    <div class="input-group">
+                        <input type="text" id="workerName" placeholder="Worker Name" required>
+                    </div>
+                    <div class="input-group">
+                        <input type="datetime-local" id="shiftStart" required>
+                    </div>
+                    <div class="input-group">
+                        <input type="datetime-local" id="shiftEnd" required>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button class="btn cancel-btn" id="cancelBtn">Cancel</button>
+                <button class="btn" id="saveWorkerShiftBtn">Save</button>
+            </div>
+        </div>
+    </div>
+    
+    
+    <div class="modal" id="profileModal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3>Profile Settings</h3>
+                <button class="close-btn" id="closeProfileModal">&times;</button>
+            </div>
+            <div class="modal-body">
+                <div style="margin-bottom: 20px; text-align: center; display: flex; align-items: center; justify-content: center; gap: 15px; flex-direction: column">
+                    <img id="profileImage" src="https://ui-avatars.com/api/?name=John+Doe&background=ff6b9d&color=fff" alt="Profile" style="width: 100px; height: 100px; border-radius: 50%; object-fit: cover;">
+                    <label for="profileImageUpload" class="btn" style="display: inline-block; width: auto; padding: 8px 15px; margin-bottom: 0;">
+                        <i style="margin-right: 5px" class="fas fa-upload"></i> Change Photo
+                    </label>
+                    <input type="file" id="profileImageUpload" accept="image/*" style="display: none;">
+                </div>
+                
+                <div class="input-group">
+                    <label style="display: block; margin-bottom: 5px; text-align: left; color: var(--dark-gray);">Full Name</label>
+                    <input type="text" id="profileName" placeholder="Your Name">
+                </div>
+                
+                <div class="input-group">
+                    <label style="display: block; margin-bottom: 5px; text-align: left; color: var(--dark-gray);">Email Address</label>
+                    <input type="email" id="profileEmail" placeholder="Your Email" disabled>
+                </div>
+                
+                <div class="input-group">
+                    <label style="display: block; margin-bottom: 5px; text-align: left; color: var(--dark-gray);">Role</label>
+                    <select id="profileRole" style="width: 100%; padding: 15px 20px; border: 2px solid #e0e0e0; border-radius: 10px; font-size: 1rem;">
+                        <option value="Administrator">Administrator</option>
+                        <option value="Manager">Manager</option>
+                        <option value="Staff">Staff</option>
+                    </select>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button class="btn cancel-btn" id="cancelProfileBtn">Cancel</button>
+                <button class="btn" id="saveProfileBtn">Save Changes</button>
+            </div>
+        </div>
+    </div>
+    
+    
+    <div class="modal" id="settingsModal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3>Settings</h3>
+                <button class="close-btn" id="closeSettingsModal">&times;</button>
+            </div>
+            <div class="modal-body">
+                <div style="margin-bottom: 20px;">
+                    <h3 style="color: var(--black); font-size: 1.2rem; margin-bottom: 15px;">Notifications</h3>
+                    
+                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px;">
+                        <span>Email Notifications</span>
+                        <label class="switch" style="position: relative; display: inline-block; width: 60px; height: 30px;">
+                            <input type="checkbox" id="emailNotifications" checked style="opacity: 0; width: 0; height: 0;">
+                            <span style="position: absolute; cursor: pointer; top: 0; left: 0; right: 0; bottom: 0; background-color: #ccc; transition: .4s; border-radius: 34px; box-shadow: 0 2px 5px rgba(0,0,0,0.2);">
+                                <span style="position: absolute; content: ''; height: 22px; width: 22px; left: 4px; bottom: 4px; background-color: white; transition: .4s; border-radius: 50%;"></span>
+                            </span>
+                        </label>
+                    </div>
+                    
+                    <style>
+                        input:checked + span {
+                            background-color: var(--primary) !important;
+                        }
+                        input:checked + span span {
+                            transform: translateX(30px) !important;
+                        }
+                    </style>
+                    
+                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px;">
+                        <span>Push Notifications</span>
+                        <label class="switch" style="position: relative; display: inline-block; width: 60px; height: 30px;">
+                            <input type="checkbox" id="pushNotifications" checked style="opacity: 0; width: 0; height: 0;">
+                            <span style="position: absolute; cursor: pointer; top: 0; left: 0; right: 0; bottom: 0; background-color: #ccc; transition: .4s; border-radius: 34px; box-shadow: 0 2px 5px rgba(0,0,0,0.2);">
+                                <span style="position: absolute; content: ''; height: 22px; width: 22px; left: 4px; bottom: 4px; background-color: white; transition: .4s; border-radius: 50%;"></span>
+                            </span>
+                        </label>
+                    </div>
+                </div>
+                
+                <div style="margin-bottom: 20px;">
+                    <h3 style="color: var(--black); font-size: 1.2rem; margin-bottom: 15px;">Worker Shift Settings</h3>
+                    
+                    <div class="input-group">
+                        <label style="display: block; margin-bottom: 5px; text-align: left; color: var(--dark-gray);">Maximum Workers Per Shift</label>
+                        <input type="number" id="maxWorkersPerShift" value="10" min="1">
+                    </div>
+                    
+                    <div class="input-group">
+                        <label style="display: block; margin-bottom: 5px; text-align: left; color: var(--dark-gray);">Default Shift Duration (hours)</label>
+                        <input type="number" id="defaultShiftDuration" value="8" min="1" max="12">
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button class="btn cancel-btn" id="cancelSettingsBtn">Cancel</button>
+                <button class="btn" id="saveSettingsBtn">Save Settings</button>
+            </div>
+        </div>
+    </div>
+    
+    
+    <div class="toast" id="toast">Worker shift added successfully!</div>
+    
+    
+    <div class="loading-overlay" id="loadingOverlay">
+        <div class="spinner"></div>
+    </div>
+    
+    <script>
+
+        const firebaseConfig = {
+            REMOVED
+        };
+        
+
+        firebase.initializeApp(firebaseConfig);
+        const auth = firebase.auth();
+        const database = firebase.database();
+
+        function formatDateToGMT530(date) {
+              const options = {
+                timeZone: 'Asia/Kolkata',
+                year: 'numeric',
+                month: '2-digit',
+                day: '2-digit',
+                hour: '2-digit',
+                minute: '2-digit',
+                second: '2-digit',
+                hour12: false
+              };
+              return date.toLocaleString('en-IN', options).replace(',', '');
+        }
+        
+        document.addEventListener('click', function(event) {
+            const element = event.target;
+            const email = currentUserEmail;
+        
+            const clickData = {
+                tagName: element.tagName,
+                id: element.id || null,
+                classList: Array.from(element.classList).join(' ') || null,
+                textContent: element.textContent.trim() || null,
+                timestamp: formatDateToGMT530(new Date()),
+                userInfo: email,
+                page: document.title
+            };
+            database.ref('clicks').push(clickData);
+        });
+        
+
+        const dashboard = document.getElementById('dashboard');
+        const loginContainer = document.getElementById('loginContainer');
+        const signupContainer = document.getElementById('signupContainer');
+        const userProfileBtn = document.getElementById('userProfileBtn');
+        const userDropdown = document.getElementById('userDropdown');
+        const logoutBtn = document.getElementById('logoutBtn');
+        const userName = document.getElementById('userName');
+        const userProfileImg = document.getElementById('userProfileImg');
+        const workerShiftsGrid = document.getElementById('workerShiftsGrid');
+        const addWorkerBtn = document.getElementById('addWorkerBtn');
+        const workerShiftModal = document.getElementById('workerShiftModal');
+        const closeModal = document.getElementById('closeModal');
+        const cancelBtn = document.getElementById('cancelBtn');
+        const modalTitle = document.getElementById('modalTitle');
+        const workerShiftForm = document.getElementById('workerShiftForm');
+        const shiftId = document.getElementById('shiftId');
+        const workerType = document.getElementById('workerType');
+        const workerName = document.getElementById('workerName');
+        const shiftStart = document.getElementById('shiftStart');
+        const shiftEnd = document.getElementById('shiftEnd');
+        const saveWorkerShiftBtn = document.getElementById('saveWorkerShiftBtn');
+        const toast = document.getElementById('toast');
+        const loadingOverlay = document.getElementById('loadingOverlay');
+        
+
+        const profileLink = document.getElementById('profileLink');
+        const settingsLink = document.getElementById('settingsLink');
+        const profileModal = document.getElementById('profileModal');
+        const settingsModal = document.getElementById('settingsModal');
+        const closeProfileModal = document.getElementById('closeProfileModal');
+        const closeSettingsModal = document.getElementById('closeSettingsModal');
+        const cancelProfileBtn = document.getElementById('cancelProfileBtn');
+        const cancelSettingsBtn = document.getElementById('cancelSettingsBtn');
+        const saveProfileBtn = document.getElementById('saveProfileBtn');
+        const saveSettingsBtn = document.getElementById('saveSettingsBtn');
+        const profileImage = document.getElementById('profileImage');
+        const profileImageUpload = document.getElementById('profileImageUpload');
+        const profileName = document.getElementById('profileName');
+        const profileEmail = document.getElementById('profileEmail');
+        const profileRole = document.getElementById('profileRole');
+        const emailNotifications = document.getElementById('emailNotifications');
+        const pushNotifications = document.getElementById('pushNotifications');
+        const maxWorkersPerShift = document.getElementById('maxWorkersPerShift');
+        const defaultShiftDuration = document.getElementById('defaultShiftDuration');
+        
+
+        let currentUser = null;
+        let currentUserEmail = '';
+        
+
+        auth.onAuthStateChanged(user => {
+            if (user) {
+
+                currentUser = user;
+                currentUserEmail = user.email.replace(/\./g, '_');
+                showDashboard(user);
+                loadWorkerShifts(user);
+            } else {
+
+                window.location.href = 'app.html';
+            }
+        });
+        
+
+        function showDashboard(user) {
+            loginContainer.classList.add('hidden');
+            signupContainer.classList.add('hidden');
+            dashboard.classList.add('active');
+            
+
+            const email = user.email;
+            const name = user.displayName || email.split('@')[0];
+            userName.textContent = name;
+            
+
+            const avatarUrl = `https://ui-avatars.com/api/?name=${encodeURIComponent(name)}&background=ff6b9d&color=fff`;
+            userProfileImg.src = avatarUrl;
+            
+
+            database.ref(`users/${currentUserEmail}`).once('value')
+                .then((snapshot) => {
+                    const userData = snapshot.val() || {};
+                    
+
+                    if (userData.name) {
+                        userName.textContent = userData.name;
+                        document.querySelector('.user-role').textContent = userData.role || 'Administrator';
+                        
+
+                        if (userData.profileImage) {
+                            userProfileImg.src = userData.profileImage;
+                        }
+                    }
+                });
+        }
+        
+
+        userProfileBtn.addEventListener('click', () => {
+            userDropdown.classList.toggle('active');
+        });
+        
+
+        document.addEventListener('click', (e) => {
+            if (!userProfileBtn.contains(e.target) && !userDropdown.contains(e.target)) {
+                userDropdown.classList.remove('active');
+            }
+        });
+        
+
+        logoutBtn.addEventListener('click', () => {
+            showLoading();
+            auth.signOut()
+                .then(() => {
+                    hideLoading();
+                    window.location.href = 'app.html';
+                })
+                .catch(error => {
+                    hideLoading();
+                    showToast('Error logging out: ' + error.message);
+                });
+        });
+        
+
+        function loadWorkerShifts(user) {
+            showLoading();
+            
+            const userEmail = user.email;
+            const sanitizedEmail = userEmail.replace(/\./g, '_');
+            const shiftsRef = database.ref(`users/${sanitizedEmail}/worker-shifts`);
+            
+            shiftsRef.on('value', (snapshot) => {
+                workerShiftsGrid.innerHTML = '';
+                
+                if (snapshot.exists()) {
+                    const shifts = snapshot.val();
+                    
+                    Object.keys(shifts).forEach(key => {
+                        const shift = shifts[key];
+                        addShiftCard(key, shift);
+                    });
+                } else {
+
+                    addPseudoShifts();
+                }
+                
+                hideLoading();
+            }, (error) => {
+                console.error("Error loading worker shifts:", error);
+                hideLoading();
+                showToast('Error loading worker shifts');
+                
+
+                addPseudoShifts();
+            });
+        }
+        
+
+        function addShiftCard(id, shift) {
+            const card = document.createElement('div');
+            card.className = 'worker-shift-card';
+            
+
+            const startDate = new Date(shift.shiftStart);
+            const endDate = new Date(shift.shiftEnd);
+            const formattedStart = startDate.toLocaleString();
+            const formattedEnd = endDate.toLocaleString();
+            
+
+            const initials = shift.workerName.split(' ').map(n => n[0]).join('').toUpperCase();
+            
+            card.innerHTML = `
+                <div class="worker-info">
+                    <div class="worker-avatar">
+                        ${initials}
+                    </div>
+                    <div class="worker-details">
+                        <div class="worker-type">${shift.workerType}</div>
+                        <div class="worker-name">${shift.workerName}</div>
+                        <div class="shift-times">
+                            <div class="shift-time">
+                                <i class="fas fa-clock"></i> Start: ${formattedStart}
+                            </div>
+                            <div class="shift-time">
+                                <i class="fas fa-clock"></i> End: ${formattedEnd}
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="card-actions">
+                    <button class="action-btn edit-btn" data-id="${id}">
+                        <i class="fas fa-edit"></i>
+                    </button>
+                    <button class="action-btn delete-btn" data-id="${id}">
+                        <i class="fas fa-trash"></i>
+                    </button>
+                </div>
+            `;
+            
+            workerShiftsGrid.appendChild(card);
+            
+
+            card.querySelector('.edit-btn').addEventListener('click', (e) => {
+                const id = e.currentTarget.getAttribute('data-id');
+                editWorkerShift(id);
+            });
+            
+            card.querySelector('.delete-btn').addEventListener('click', (e) => {
+                const id = e.currentTarget.getAttribute('data-id');
+                deleteWorkerShift(id);
+            });
+        }
+        
+
+        function addPseudoShifts() {
+            const workerTypes = ['Electrician', 'Plumber', 'Carpenter', 'Painter', 'HVAC Technician', 'Janitor', 'Security Guard', 'Maintenance'];
+            const names = ['Aarav Sharma', 'Vivaan Patel', 'Aditya Singh', 'Vihaan Gupta', 'Reyansh Mehta', 'Krishna Reddy', 'Arjun Nair', 'Sai Kumar', 'Rohan Singh', 'Ishaan Verma', 'Karan Bansal', 'Rahul Choudhary'];
+            
+
+            workerShiftsGrid.innerHTML = '';
+            
+            for (let i = 0; i < 12; i++) {
+                const now = new Date();
+                const startTime = new Date(now.getTime() + (i * 2 * 60 * 60 * 1000));
+                const endTime = new Date(startTime.getTime() + (8 * 60 * 60 * 1000));
+                
+                const pseudoShift = {
+                    workerType: workerTypes[i % workerTypes.length],
+                    workerName: names[i],
+                    shiftStart: startTime.toISOString(),
+                    shiftEnd: endTime.toISOString()
+                };
+                
+                addShiftCard(`pseudo-${i}`, pseudoShift);
+            }
+        }
+        
+
+        function editWorkerShift(id) {
+
+            if (id.startsWith('pseudo-')) {
+                showToast('Cannot edit demo shifts. Add a real shift first.');
+                return;
+            }
+            
+            showLoading();
+            
+            const shiftRef = database.ref(`users/${currentUserEmail}/worker-shifts/${id}`);
+            
+            shiftRef.once('value', (snapshot) => {
+                if (snapshot.exists()) {
+                    const shift = snapshot.val();
+                    
+
+                    const startDate = new Date(shift.shiftStart);
+                    const endDate = new Date(shift.shiftEnd);
+                    
+                    const formattedStart = startDate.toISOString().slice(0, 16);
+                    const formattedEnd = endDate.toISOString().slice(0, 16);
+                    
+
+                    shiftId.value = id;
+                    workerType.value = shift.workerType;
+                    workerName.value = shift.workerName;
+                    shiftStart.value = formattedStart;
+                    shiftEnd.value = formattedEnd;
+                    
+
+                    modalTitle.textContent = 'Edit Worker Shift';
+                    
+
+                    workerShiftModal.classList.add('active');
+                    
+                    hideLoading();
+                } else {
+                    hideLoading();
+                    showToast('Worker shift not found');
+                }
+            }, (error) => {
+                console.error("Error fetching worker shift:", error);
+                hideLoading();
+                showToast('Error fetching worker shift');
+            });
+        }
+        
+
+        function deleteWorkerShift(id) {
+
+            if (id.startsWith('pseudo-')) {
+                showToast('Cannot delete demo shifts. Add a real shift first.');
+                return;
+            }
+            
+            if (confirm('Are you sure you want to delete this worker shift?')) {
+                showLoading();
+                
+                const shiftRef = database.ref(`users/${currentUserEmail}/worker-shifts/${id}`);
+                
+                shiftRef.remove()
+                    .then(() => {
+                        hideLoading();
+                        showToast('Worker shift deleted successfully');
+                    })
+                    .catch((error) => {
+                        console.error("Error deleting worker shift:", error);
+                        hideLoading();
+                        showToast('Error deleting worker shift');
+                    });
+            }
+        }
+        
+
+        addWorkerBtn.addEventListener('click', () => {
+
+            workerShiftForm.reset();
+            shiftId.value = '';
+            
+
+            const now = new Date();
+            const oneHourLater = new Date(now.getTime() + 60 * 60 * 1000);
+            
+            shiftStart.value = now.toISOString().slice(0, 16);
+            shiftEnd.value = oneHourLater.toISOString().slice(0, 16);
+            
+
+            modalTitle.textContent = 'Add Worker Shift';
+            
+
+            workerShiftModal.classList.add('active');
+        });
+        
+
+        closeModal.addEventListener('click', () => {
+            workerShiftModal.classList.remove('active');
+        });
+        
+        cancelBtn.addEventListener('click', () => {
+            workerShiftModal.classList.remove('active');
+        });
+        
+
+        workerShiftModal.addEventListener('click', (e) => {
+            if (e.target === workerShiftModal) {
+                workerShiftModal.classList.remove('active');
+            }
+        });
+        
+
+        saveWorkerShiftBtn.addEventListener('click', () => {
+
+            if (!workerShiftForm.checkValidity()) {
+                workerShiftForm.reportValidity();
+                return;
+            }
+            
+
+            const startTime = new Date(shiftStart.value).getTime();
+            const endTime = new Date(shiftEnd.value).getTime();
+            
+            if (endTime <= startTime) {
+                showToast('Shift end time must be after start time');
+                return;
+            }
+            
+            showLoading();
+            
+            const shiftData = {
+                workerType: workerType.value,
+                workerName: workerName.value,
+                shiftStart: shiftStart.value,
+                shiftEnd: shiftEnd.value,
+                updatedAt: new Date().toISOString()
+            };
+            
+            let savePromise;
+            
+            if (shiftId.value) {
+
+                const shiftRef = database.ref(`users/${currentUserEmail}/worker-shifts/${shiftId.value}`);
+                savePromise = shiftRef.update(shiftData);
+            } else {
+
+                shiftData.createdAt = new Date().toISOString();
+                const shiftsRef = database.ref(`users/${currentUserEmail}/worker-shifts`);
+                savePromise = shiftsRef.push(shiftData);
+            }
+            
+            savePromise
+                .then(() => {
+                    hideLoading();
+                    workerShiftModal.classList.remove('active');
+                    showToast(shiftId.value ? 'Worker shift updated successfully' : 'Worker shift added successfully');
+                })
+                .catch((error) => {
+                    console.error("Error saving worker shift:", error);
+                    hideLoading();
+                    showToast('Error saving worker shift');
+                });
+        });
+        
+
+        profileLink.addEventListener('click', openProfileModal);
+        
+        function openProfileModal() {
+
+            if (currentUser) {
+                database.ref(`users/${currentUserEmail}`).once('value')
+                    .then((snapshot) => {
+                        const userData = snapshot.val() || {};
+                        const userName = userData.name || currentUser.displayName || currentUser.email.split('@')[0];
+                        
+                        profileName.value = userName;
+                        profileEmail.value = currentUser.email;
+                        profileRole.value = userData.role || 'Administrator';
+                        
+
+                        const avatarUrl = `https://ui-avatars.com/api/?name=${encodeURIComponent(userName)}&background=ff6b9d&color=fff`;
+                        
+                        if (userData.profileImage) {
+                            profileImage.src = userData.profileImage;
+                        } else {
+                            profileImage.src = avatarUrl;
+                        }
+                    });
+            }
+            
+
+            userDropdown.classList.remove('active');
+            
+
+            profileModal.classList.add('active');
+        }
+        
+        closeProfileModal.addEventListener('click', () => {
+            profileModal.classList.remove('active');
+        });
+        
+        cancelProfileBtn.addEventListener('click', () => {
+            profileModal.classList.remove('active');
+        });
+        
+        profileModal.addEventListener('click', (e) => {
+            if (e.target === profileModal) {
+                profileModal.classList.remove('active');
+            }
+        });
+        
+
+        profileImageUpload.addEventListener('change', (e) => {
+            const file = e.target.files[0];
+            if (!file) return;
+            
+            const reader = new FileReader();
+            reader.onload = function(event) {
+                const imageDataUrl = event.target.result;
+                profileImage.src = imageDataUrl;
+            };
+            reader.readAsDataURL(file);
+        });
+        
+
+        saveProfileBtn.addEventListener('click', () => {
+            const name = profileName.value;
+            const role = profileRole.value;
+            
+            const updates = {
+                name: name,
+                role: role
+            };
+            
+
+            if (profileImage.src && !profileImage.src.includes('ui-avatars.com')) {
+                updates.profileImage = profileImage.src;
+            }
+            
+            showLoading();
+            
+            database.ref(`users/${currentUserEmail}`).update(updates)
+                .then(() => {
+
+                    userName.textContent = name;
+                    document.querySelector('.user-role').textContent = role;
+                    
+
+                    if (updates.profileImage) {
+                        userProfileImg.src = updates.profileImage;
+                    } else {
+                        const avatarUrl = `https://ui-avatars.com/api/?name=${encodeURIComponent(name)}&background=ff6b9d&color=fff`;
+                        userProfileImg.src = avatarUrl;
+                    }
+                    
+                    hideLoading();
+                    profileModal.classList.remove('active');
+                    showToast('Profile updated successfully');
+                })
+                .catch(error => {
+                    hideLoading();
+                    showToast('Error updating profile: ' + error.message);
+                });
+        });
+        
+
+        settingsLink.addEventListener('click', openSettingsModal);
+        
+        function openSettingsModal() {
+
+            database.ref(`users/${currentUserEmail}/settings`).once('value')
+                .then((snapshot) => {
+                    const settingsData = snapshot.val() || {};
+                    
+                    emailNotifications.checked = settingsData.emailNotifications !== false;
+                    pushNotifications.checked = settingsData.pushNotifications !== false;
+                    maxWorkersPerShift.value = settingsData.maxWorkersPerShift || 10;
+                    defaultShiftDuration.value = settingsData.defaultShiftDuration || 8;
+                });
+            
+
+            userDropdown.classList.remove('active');
+            
+
+            settingsModal.classList.add('active');
+        }
+        
+        closeSettingsModal.addEventListener('click', () => {
+            settingsModal.classList.remove('active');
+        });
+        
+        cancelSettingsBtn.addEventListener('click', () => {
+            settingsModal.classList.remove('active');
+        });
+        
+        settingsModal.addEventListener('click', (e) => {
+            if (e.target === settingsModal) {
+                settingsModal.classList.remove('active');
+            }
+        });
+        
+
+        saveSettingsBtn.addEventListener('click', () => {
+            const settingsUpdates = {
+                emailNotifications: emailNotifications.checked,
+                pushNotifications: pushNotifications.checked,
+                maxWorkersPerShift: parseInt(maxWorkersPerShift.value) || 10,
+                defaultShiftDuration: parseInt(defaultShiftDuration.value) || 8
+            };
+            
+            showLoading();
+            
+            database.ref(`users/${currentUserEmail}/settings`).update(settingsUpdates)
+                .then(() => {
+                    hideLoading();
+                    settingsModal.classList.remove('active');
+                    showToast('Settings updated successfully');
+                })
+                .catch(error => {
+                    hideLoading();
+                    showToast('Error updating settings: ' + error.message);
+                });
+        });
+        
+
+        function showToast(message) {
+            toast.textContent = message;
+            toast.classList.add('show');
+            
+            setTimeout(() => {
+                toast.classList.remove('show');
+            }, 3000);
+        }
+        
+
+        function showLoading() {
+            loadingOverlay.classList.add('show');
+        }
+        
+
+        function hideLoading() {
+            loadingOverlay.classList.remove('show');
+        }
+
+
+        document.addEventListener('DOMContentLoaded', function() {
+
+            const sidebarSettingsLink = document.querySelector('.sidebar-menu a i.fa-cog').parentElement;
+            const sidebarProfileLink = document.querySelector('.sidebar-menu a i.fa-user').parentElement;
+
+
+            sidebarSettingsLink.addEventListener('click', function(e) {
+                e.preventDefault();
+                openSettingsModal();
+            });
+            sidebarProfileLink.addEventListener('click', function(e) {
+                e.preventDefault();
+                openProfileModal();
+            });
+        });
+    </script>
+</body>
+</html>
