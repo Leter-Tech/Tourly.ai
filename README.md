@@ -187,7 +187,7 @@ graph TD
 
 ---
 
-## Getting Started 🚀
+## 🚀 Getting Started
 
 ### Requirements:
 - A modern web browser with JavaScript enabled.
