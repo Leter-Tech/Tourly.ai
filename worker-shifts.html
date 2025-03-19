@@ -745,8 +745,8 @@
     </style>
 </head>
 <body>
-
-        <style>
+    
+    <style>
     
         .zoom-notification {
             --primary-color: #fb6cbd;
@@ -843,40 +843,40 @@
         </div>
         </div>
         <script>
-            const zoomNotification = document.getElementById('zoomNotification');
-            const currentWidthSpan = document.getElementById('currentWidth');
-            const lgoutsb = document.getElementById('sbrlg')
-    
-            function checkViewportWidth() {
-                const currentWidth = window.innerWidth;
-                currentWidthSpan.textContent = currentWidth;
-                const currentHeight = window.innerHeight;
-    
-                const logoutSidebar = document.querySelector('.sidebar-logout');
-    
-                if (currentWidth < 1430) {
-                    zoomNotification.style.display = 'flex';
-                } else {
-                    zoomNotification.style.display = 'none';
-                }
-
-                if (logoutSidebar) {
-                    if (currentHeight > 734) {
-                        logoutSidebar.style.display = 'block';
+                const zoomNotification = document.getElementById('zoomNotification');
+                const currentWidthSpan = document.getElementById('currentWidth');
+                const lgoutsb = document.getElementById('sbrlg')
+        
+                function checkViewportWidth() {
+                    const currentWidth = window.innerWidth;
+                    currentWidthSpan.textContent = currentWidth;
+                    const currentHeight = window.innerHeight;
+        
+                    const logoutSidebar = document.querySelector('.sidebar-logout');
+        
+                    if (currentWidth < 1430) {
+                        zoomNotification.style.display = 'flex';
                     } else {
-                        logoutSidebar.style.display = 'none';
+                        zoomNotification.style.display = 'none';
+                    }
+
+                    if (logoutSidebar) {
+                        if (currentHeight > 734) {
+                            logoutSidebar.style.display = 'block';
+                        } else {
+                            logoutSidebar.style.display = 'none';
+                        }
                     }
                 }
-            }
-    
-            document.addEventListener('DOMContentLoaded', function() {
-                checkViewportWidth();
-            });
+        
+                document.addEventListener('DOMContentLoaded', function() {
+                    checkViewportWidth();
+                });
 
-            window.addEventListener('resize', checkViewportWidth);
-            window.addEventListener('load', checkViewportWidth);
-        </script>
-    
+                window.addEventListener('resize', checkViewportWidth);
+                window.addEventListener('load', checkViewportWidth);
+            </script>
+
     <div class="auth-container hidden" id="loginContainer">
         <div onclick="window.open('app.html', '_self');" style="cursor: pointer;">
         <div class="logo"><i class="fas fa-torii-gate"></i></div>
@@ -989,7 +989,7 @@
                     </a>
                 </li>
             </ul>
-            <div class="sidebar-logout">
+            <div id="sbrlg" class="sidebar-logout">
                 <a href="#" id="sidebarLogoutBtn">
                     <i class="fas fa-sign-out-alt"></i>
                     <span>Logout</span>
