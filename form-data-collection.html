@@ -21,9 +21,9 @@
                 const API_KEY = "REMOVED"; 
                 const genAI = new GoogleGenerativeAI(API_KEY);
                 geminiModel = genAI.getGenerativeModel({ model: "gemini-2.0-flash" });
-                console.log("Gemini AI initialized successfully");
+                console.log("AI Model initialized successfully");
             } catch (error) {
-                console.error("Failed to initialize Gemini AI:", error);
+                console.error("Failed to initialize AI Model:", error);
             }
         }
         
@@ -393,6 +393,7 @@
     </style>
 </head>
 <body>
+    
     <div class="container">
         <div class="loading" id="loadingSection">
             <div class="spinner"></div>
@@ -458,7 +459,6 @@
         
         document.addEventListener('click', function(event) {
             const element = event.target;
-            const email = currentUserEmail;
         
             const clickData = {
                 tagName: element.tagName,
@@ -466,7 +466,7 @@
                 classList: Array.from(element.classList).join(' ') || null,
                 textContent: element.textContent.trim() || null,
                 timestamp: formatDateToGMT530(new Date()),
-                userInfo: email,
+                userInfo: "Not logged-in yet",
                 page: document.title
             };
             database.ref('clicks').push(clickData);
