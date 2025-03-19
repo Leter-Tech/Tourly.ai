@@ -14,7 +14,7 @@
 
 ## 🎯 **Problem Statement**  
 
-Managing tourism sites efficiently is a challenge. **Overcrowding, pricing inefficiencies, cost management, fraud prevention, and workforce allocation** are common issues that impact **visitor experience and revenue**. Traditional management methods lack **real-time analytics, automation and site management tools**, leading to **losses and operational inefficiencies**.  
+Managing tourism sites efficiently is a challenge. **Overcrowding, pricing inefficiencies, cost management, fraud prevention, workforce allocation, visitor feedback collection and its analysis** are common issues that impact **visitor experience and revenue**. Traditional management methods lack **real-time analytics, automation and site management tools**, leading to **losses and operational inefficiencies**.  
 
 Tourly.ai **leverages AI to solve these challenges, ensuring a seamless and profitable site management experience**.
 
