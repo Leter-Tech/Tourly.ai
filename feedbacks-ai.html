@@ -4106,7 +4106,7 @@
                 updateFormPreview();
             }
         }
-        
+
        
         closeFormBuilderModal.addEventListener('click', () => {
             formBuilderModal.classList.remove('active');
@@ -4115,7 +4115,7 @@
         cancelFormBtn.addEventListener('click', () => {
             formBuilderModal.classList.remove('active');
         });
-       
+        
         closeAnalysisModal.addEventListener('click', () => {
             formAnalysisModal.classList.remove('active');
         });
@@ -4395,9 +4395,9 @@
                 const API_KEY = "REMOVED"; 
                 const genAI = new GoogleGenerativeAI(API_KEY);
                 geminiModel = genAI.getGenerativeModel({ model: "gemini-2.0-flash" });
-                console.log("Gemini AI initialized successfully");
+                console.log("AI initialized successfully");
             } catch (error) {
-                console.error("Failed to initialize Gemini AI:", error);
+                console.error("Failed to initialize AI:", error);
             }
         }
         
@@ -4407,7 +4407,7 @@
        
         window.generateRealAIInsights = async function(form, responses) {
             if (!geminiModel) {
-                console.error("Gemini model not initialized");
+                console.error("AI model not initialized");
                 return null;
             }
             
@@ -4481,12 +4481,12 @@
             ]
             `;
             
-            console.log("Sending to Gemini:", prompt);
+            console.log("Sending to AI:", prompt);
             
             try {
                 const result = await geminiModel.generateContent([prompt]);
                 const response = await result.response.text();
-                console.log("Gemini raw response:", response);
+                console.log("AI raw response:", response);
                 
                
                 let jsonMatch = response.match(/\[\s*\{[\s\S]*\}\s*\]/);
@@ -4506,7 +4506,7 @@
                     return null;
                 }
             } catch (error) {
-                console.error("Error calling Gemini API:", error);
+                console.error("Error calling AI API:", error);
                 return null;
             }
         };
