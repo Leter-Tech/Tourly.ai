@@ -32,7 +32,7 @@
         
         async function analyzeWithGemini(questionInfo, answer) {
             if (!geminiModel) {
-                console.error("Gemini model not initialized");
+                console.error("AI model not initialized");
                 return 'neutral';
             }
             
@@ -62,12 +62,12 @@
                     Return only a valid JSON object with the sentiment: {"sentiment": "positive"}, {"sentiment": "negative"}, or {"sentiment": "neutral"}`;
             }
             
-            console.log("Sending to Gemini:", prompt);
+            console.log("Sending to AI:", prompt);
             
             try {
                 const result = await geminiModel.generateContent([prompt]);
                 const response = await result.response.text();
-                console.log("Gemini raw response:", response);
+                console.log("AI raw response:", response);
                 
                
                 let jsonMatch = response.match(/\{[\s\S]*"sentiment"[\s\S]*:[\s\S]*"(positive|negative|neutral)"[\s\S]*\}/);
@@ -96,7 +96,7 @@
                 
                 return parsedSentiment;
             } catch (error) {
-                console.error("Error calling Gemini API:", error);
+                console.error("Error calling AI API:", error);
                 return 'neutral';
             }
         }
