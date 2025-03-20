@@ -210,7 +210,7 @@ graph TD
 
 - Logging out and reloading helps reset the app and ensures the models load properly.
 
-- Make sure hardware and graphics acceleration are enabled in your browser settings for the features to work as intended.
+- Make sure hardware and graphics acceleration are enabled in your browser for the features to work as intended.
 
 - If your device has low processing power, the models may not load properly.
 
