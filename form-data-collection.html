@@ -12,7 +12,7 @@
     <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-database-compat.js"></script>
     <script type="module">
-        import { GoogleGenerativeAI } from "https://unpkg.com/@google/generative-ai?module";
+        import { GoogleGenerativeAI } from "https://esm.sh/@google/generative-ai@0.24.0";
         
         let geminiModel;
         
@@ -506,9 +506,7 @@
                 loadPseudoForm(formId);
                 return;
             }
-            
-            console.log("Looking for form ID:", formId);
-           
+                       
             const usersRef = database.ref('users');
             
             usersRef.once('value')
@@ -518,11 +516,9 @@
                         let found = false;
                        
                         for (const userEmailKey in users) {
-                            console.log("Checking user:", userEmailKey);
                            
                             if (users[userEmailKey]['feedback-forms']) {
                                 if (users[userEmailKey]['feedback-forms'][formId]) {
-                                    console.log("Form found for user:", userEmailKey);
                                    
                                     formData = users[userEmailKey]['feedback-forms'][formId];
                                     userEmail = userEmailKey;
@@ -945,7 +941,7 @@
                 } catch (analysisError) {
                     console.error("Critical error in sentiment analysis:", analysisError);
                     errorInAnalysis = true;
-                    alert('There was an error analyzing your feedback. Submitting with neutral sentiment.');
+                    alert('There was an error analyzing the sentiments your feedback. Submitting with neutral sentiment.');
                     sentiment = 'neutral';
                 }
                 
