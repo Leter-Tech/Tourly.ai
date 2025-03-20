@@ -200,6 +200,22 @@ graph TD
 
 ---
 
+## ⚠️ **Important Note**
+
+- If some features aren’t working, try logging out and reloading the page.
+
+- Our app runs machine learning models directly in your browser using JavaScript, instead of using a backend server.
+
+- These models are large and take time to load, so some features might not work until everything is ready.
+
+- Logging out and reloading helps reset the app and ensures the models load properly.
+
+- Make sure hardware and graphics acceleration are enabled in your browser settings for the features to work as intended.
+
+- If your device has low processing power, the models may not load properly.
+
+---
+
 ## 🤝 **Contributing**  
 
 Contributions are always welcome! Please follow these steps:
