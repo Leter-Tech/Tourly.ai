@@ -204,7 +204,7 @@ graph TD
 
 - If some features aren’t working, try logging out and reloading the page.
 
-- Our app runs machine learning models directly in your browser using JavaScript, instead of using a backend server.
+- Our app runs ML models directly in your browser using JavaScript, instead of using a backend server.
 
 - These models are large and take time to load, so some features might not work until everything is ready.
 
