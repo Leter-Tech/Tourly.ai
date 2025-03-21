@@ -2,7 +2,7 @@
 
 **Manage your tourist site smartly!**  
 
-**Tourly.ai** is an advanced **AI-driven tourism management platform** that helps site owners **optimize operations, prevent overcrowding, and enhance visitor experiences** through intelligent automation and tools.
+**Tourly.ai** is an advanced **AI-driven tourist site management platform** that helps site owners **enhance visitor experiences, optimize operations, and maximize revenue** through intelligent automation and management tools.
 
 ## 🚀 **Demo**
 
